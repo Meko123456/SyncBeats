@@ -1,0 +1,40 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['username'])",
+        "username": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+        }
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        "meta": {
+          ".write": "auth != null"
+        },
+        "playback": {
+          ".write": "auth != null"
+        },
+        "queue": {
+          ".write": "auth != null"
+        },
+        "chat": {
+          "$msgId": {
+            ".write": "auth != null && !data.exists() && newData.child('userId').val() === auth.uid"
+          }
+        },
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
+      }
+    }
+  }
+}

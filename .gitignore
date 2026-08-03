@@ -1,0 +1,23 @@
+*.iml
+.gradle
+local.properties
+.idea/
+.kotlin/
+.DS_Store
+build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Firebase config — each developer supplies their own (see README)
+google-services.json
+GoogleService-Info.plist
+
+# Signing
+*.jks
+*.keystore
+
+# Xcode
+iosApp/build/
+iosApp/DerivedData/
+xcuserdata/
