@@ -56,12 +56,12 @@ The project builds without Firebase credentials, but it needs them at runtime.
 
 1. Go to <https://console.firebase.google.com> and create a project.
 2. Add an **Android app** with package name `com.example.myapplicationmusicsharing`.
-3. Download `google-services.json` and put it in the `app/` directory.
+3. Download `google-services.json` and put it in the `composeApp/` directory.
 4. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
 5. In **Build → Realtime Database**, create a database, then open the **Rules** tab
    and paste the contents of [`database.rules.json`](database.rules.json).
 
-Then build and install as usual (Android Studio, or `./gradlew :app:installDebug`).
+Then build and install as usual (Android Studio, or `./gradlew :composeApp:installDebug`).
 
 ## Trying it with two people
 
