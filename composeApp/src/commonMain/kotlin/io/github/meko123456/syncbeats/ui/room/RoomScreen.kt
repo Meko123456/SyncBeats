@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.meko123456.syncbeats.sync.ListenerStatus
 import io.github.meko123456.syncbeats.data.QueueItem
 import io.github.meko123456.syncbeats.data.SearchResult
 import io.github.meko123456.syncbeats.ui.PlatformBackHandler
@@ -364,6 +365,17 @@ private fun NowPlayingCard(
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     }
                 }
+                // Whether this listener is actually in step. Silence has four different causes
+                // and they need different reactions, so the screen names the one in play.
+                Text(
+                    ListenerStatus.label(state.listenerStatus),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (ListenerStatus.isProblem(state.listenerStatus)) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
                 ProgressRow(state, onSeek)
                 ControlsRow(
                     state = state,

@@ -15,6 +15,12 @@ import io.github.meko123456.syncbeats.data.RoomMeta
 import io.github.meko123456.syncbeats.data.SavedPlaylist
 import io.github.meko123456.syncbeats.data.SearchResult
 import io.github.meko123456.syncbeats.playback.PlayerController
+import io.github.meko123456.syncbeats.sync.DriftMath
+import io.github.meko123456.syncbeats.sync.ListenerSnapshot
+import io.github.meko123456.syncbeats.sync.ListenerStatus
+import io.github.meko123456.syncbeats.util.currentTimeMillis
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 import io.github.meko123456.syncbeats.sync.SyncEngine
 import io.github.meko123456.syncbeats.ui.ErrorCopy
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +57,8 @@ data class RoomUiState(
     val searching: Boolean = false,
     val resolving: Boolean = false,
     val error: String? = null,
+    /** Whether this listener is actually in step with the room — see [ListenerStatus]. */
+    val listenerStatus: ListenerStatus = ListenerStatus.NothingPlaying,
 ) {
     val isHost: Boolean get() = currentUserId.isNotBlank() && meta?.hostId == currentUserId
 }
@@ -115,11 +123,24 @@ class RoomViewModel(
         UiExtras(search, searching, resolving, error, username)
     }
 
+    /**
+     * Drives the sync indicator. Room state only changes when the host does something, but drift
+     * accumulates second by second, so the status has to be recomputed on a clock or it would
+     * report "in sync" indefinitely while the listener quietly fell behind.
+     */
+    private val statusTicker = flow {
+        while (true) {
+            emit(Unit)
+            delay(STATUS_TICK_MS)
+        }
+    }
+
     val state: StateFlow<RoomUiState> = combine(
         roomDataFlow,
         uiExtrasFlow,
         syncEngine.serverOffset,
-    ) { data, extras, serverOffset ->
+        statusTicker,
+    ) { data, extras, serverOffset, _ ->
         val user = authRepo.currentUser()
         val uid = user?.uid.orEmpty()
         val emailHandle = user?.email?.substringBefore("@").orEmpty()
@@ -137,8 +158,34 @@ class RoomViewModel(
             searching = extras.searching,
             resolving = extras.resolving,
             error = extras.error,
+            listenerStatus = listenerStatus(data.playback, extras.resolving, serverOffset),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RoomUiState(roomId = roomId))
+
+    private fun listenerStatus(
+        playback: PlaybackState?,
+        resolving: Boolean,
+        serverOffsetMs: Long,
+    ): ListenerStatus {
+        val track = playback?.takeIf { it.videoId.isNotBlank() }
+        val expected = track?.let {
+            DriftMath.expectedPositionMs(
+                state = it,
+                serverNowMs = DriftMath.serverNowMs(currentTimeMillis(), serverOffsetMs),
+            )
+        } ?: 0L
+        return ListenerStatus.of(
+            ListenerSnapshot(
+                hasTrack = track != null,
+                roomIsPlaying = track?.isPlaying == true,
+                resolving = resolving,
+                playerConnected = playerController.connected.value,
+                playerIsPlaying = playerController.isPlaying(),
+                playerPositionMs = playerController.currentPositionMs(),
+                expectedPositionMs = expected,
+            ),
+        )
+    }
 
     /** Whether this room is bookmarked in the current user's saved rooms. */
     val isSaved: StateFlow<Boolean> =
@@ -393,6 +440,11 @@ class RoomViewModel(
                 text = text.trim(),
             )
         }
+    }
+
+    private companion object {
+        /** Often enough for the indicator to be honest, rarely enough to be free. */
+        const val STATUS_TICK_MS = 1_000L
     }
 
     fun clearError() {
