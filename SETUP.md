@@ -75,3 +75,15 @@ The APK lands in `app/build/outputs/apk/debug/`. Sideload to your three phones.
   and won't resume, just skip and play it again.
 - `usesCleartextTraffic="true"` is set in the manifest only because some YouTube
   CDN endpoints occasionally return non-HTTPS URLs. Strip it later if you'd rather not.
+
+## Deploying the database rules
+
+The rules in `database.rules.json` are not applied by anything in the app — they have to be
+deployed, and until they are, the database is running on whatever rules were last pushed:
+
+```sh
+firebase deploy --only database
+```
+
+`firebase.json` in the repo root points at the rules file, so no arguments are needed. The rules
+are covered by tests (`tools/rules-tests`), which CI runs on every push.

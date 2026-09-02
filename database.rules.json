@@ -1,39 +1,122 @@
 {
+  // Nothing is readable or writable unless a rule below says so.
   "rules": {
     ".read": false,
     ".write": false,
+
     "users": {
       "$uid": {
-        ".read": "auth != null",
+        // Your own profile only. This used to be readable by any signed-in user, which exposed
+        // every user's playlists, listening history and saved rooms to anyone with an account.
+        // Nothing in the app needs another person's node: the display names shown in a room come
+        // from rooms/$roomId/members, and every per-user read uses the caller's own uid.
+        ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['username'])",
         "username": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
-        }
+        },
+        // Each of these is read with orderByChild, so the index has to exist server-side or
+        // Firebase sorts the whole node on the client and warns about it.
+        "playlists": { ".indexOn": "addedAt" },
+        "history": { ".indexOn": "playedAt" },
+        "savedRooms": { ".indexOn": "savedAt" }
       }
     },
+
     "rooms": {
       "$roomId": {
+        // Readable by any signed-in user, because you have to be able to look a room up by its
+        // code before you can join it. Knowing the code is the entry ticket.
         ".read": "auth != null",
+
         "meta": {
-          ".write": "auth != null"
+          // Two legitimate writes, and nothing else:
+          //   1. Creating the room — only if it does not already exist, and only naming yourself
+          //      as host. Previously any signed-in user could overwrite any room's meta, which
+          //      meant overwriting hostId: a stranger who guessed a code could seize the room.
+          //   2. Taking control — an existing *member* may set hostId to themselves (the app's
+          //      "Take control" button) or leave it unchanged while editing the name. They can
+          //      never hand the room to a third party.
+          ".write": "auth != null && ((!data.exists() && newData.child('hostId').val() === auth.uid) || (data.exists() && root.child('rooms/' + $roomId + '/members/' + auth.uid).exists() && (newData.child('hostId').val() === auth.uid || newData.child('hostId').val() === data.child('hostId').val())))",
+          ".validate": "newData.hasChildren(['hostId', 'name', 'createdAt'])",
+          "hostId": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
+          // Immutable once set, so a later write cannot rewrite the room's history.
+          "createdAt": { ".validate": "newData.isNumber() && (!data.exists() || newData.val() === data.val())" },
+          "$other": { ".validate": false }
         },
+
         "playback": {
-          ".write": "auth != null"
+          // Host only. That is already how the app behaves — every playback control is disabled
+          // for non-hosts, and a member who wants control calls takeControl first — but until now
+          // the rules let any signed-in user drive any room's playback.
+          //
+          // The take-control-then-play sequence is safe: writes from one client are applied in
+          // order, so the hostId write lands before the playback write is evaluated.
+          ".write": "auth != null && root.child('rooms/' + $roomId + '/meta/hostId').val() === auth.uid",
+          "videoId": { ".validate": "newData.isString()" },
+          "title": { ".validate": "newData.isString()" },
+          "artist": { ".validate": "newData.isString()" },
+          "thumbnailUrl": { ".validate": "newData.isString()" },
+          "durationMs": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "isPlaying": { ".validate": "newData.isBoolean()" },
+          // A negative position would make every listener seek to zero and stutter.
+          "positionMs": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "updatedAt": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
         },
+
         "queue": {
-          ".write": "auth != null"
-        },
-        "chat": {
-          "$msgId": {
-            ".write": "auth != null && !data.exists() && newData.child('userId').val() === auth.uid"
+          ".indexOn": "addedAt",
+          "$itemId": {
+            // Add: members and the host, and only stamped with your own id — so the queue cannot
+            // be filled with entries attributed to someone else.
+            // Remove: the host (the auto-advance removes the track it is about to play) or
+            // whoever added it. Nobody else can clear another person's song.
+            // Editing an existing entry is not a thing the app does, so it is not allowed.
+            ".write": "auth != null && ((!data.exists() && newData.exists() && (root.child('rooms/' + $roomId + '/members/' + auth.uid).exists() || root.child('rooms/' + $roomId + '/meta/hostId').val() === auth.uid) && newData.child('addedBy').val() === auth.uid) || (data.exists() && !newData.exists() && (root.child('rooms/' + $roomId + '/meta/hostId').val() === auth.uid || data.child('addedBy').val() === auth.uid)))",
+            ".validate": "newData.hasChildren(['videoId', 'addedBy', 'addedAt'])",
+            "videoId": { ".validate": "newData.isString() && newData.val().length > 0" },
+            "title": { ".validate": "newData.isString()" },
+            "artist": { ".validate": "newData.isString()" },
+            "thumbnailUrl": { ".validate": "newData.isString()" },
+            "durationMs": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "addedBy": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+            "addedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
           }
         },
+
+        "chat": {
+          ".indexOn": "sentAt",
+          "$msgId": {
+            // Send once, never edit. Sending requires being in the room, which the previous rule
+            // did not check — any signed-in user could post into any room they could name.
+            ".write": "auth != null && !data.exists() && newData.child('userId').val() === auth.uid && (root.child('rooms/' + $roomId + '/members/' + auth.uid).exists() || root.child('rooms/' + $roomId + '/meta/hostId').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['userId', 'username', 'text', 'sentAt'])",
+            "userId": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+            "username": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30" },
+            "text": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 500" },
+            "sentAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+
         "members": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid"
+            // Your own presence only. The client arms onDisconnect().removeValue() before
+            // publishing, so a dropped connection cleans itself up; a delete has no newData and
+            // therefore skips the validation below.
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['username', 'joinedAt'])",
+            "username": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
           }
-        }
+        },
+
+        "$other": { ".validate": false }
       }
     }
   }

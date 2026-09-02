@@ -21,3 +21,8 @@ GoogleService-Info.plist
 iosApp/build/
 iosApp/DerivedData/
 xcuserdata/
+node_modules/
+
+# Firebase emulator output
+*-debug.log
+.firebase/
