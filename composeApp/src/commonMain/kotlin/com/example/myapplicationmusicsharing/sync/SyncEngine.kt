@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 class SyncEngine(
     private val firebase: FirebaseRepository,
@@ -99,7 +98,7 @@ class SyncEngine(
         val expectedPosition = expectedPositionMs(state)
         // The track ran out while nobody was applying it (e.g. the room sat
         // idle with isPlaying stuck true). Don't start it; let the host clean up.
-        if (state.isPlaying && state.durationMs > 0 && expectedPosition >= state.durationMs) {
+        if (state.isPlaying && DriftMath.isPastEnd(expectedPosition, state.durationMs)) {
             lastAppliedVideoId = state.videoId
             stopDriftLoop()
             player.stop()
@@ -136,19 +135,18 @@ class SyncEngine(
     }
 
     private fun applyPlayPauseAndDrift(state: PlaybackState, expectedPosition: Long) {
-        val diff = abs(player.currentPositionMs() - expectedPosition)
-        if (diff > Constants.DRIFT_THRESHOLD_MS) {
-            player.seekTo(expectedPosition.coerceAtLeast(0L))
+        if (DriftMath.shouldSeek(player.currentPositionMs(), expectedPosition)) {
+            player.seekTo(DriftMath.seekTargetMs(expectedPosition))
         }
         if (state.isPlaying && !player.isPlaying()) player.setPlayWhenReady(true)
         if (!state.isPlaying && player.isPlaying()) player.setPlayWhenReady(false)
     }
 
-    private fun expectedPositionMs(state: PlaybackState): Long {
-        val serverNow = currentTimeMillis() + _serverOffset.value
-        val elapsed = if (state.isPlaying) (serverNow - state.updatedAt).coerceAtLeast(0L) else 0L
-        return state.positionMs + elapsed
-    }
+    private fun expectedPositionMs(state: PlaybackState): Long =
+        DriftMath.expectedPositionMs(
+            state = state,
+            serverNowMs = DriftMath.serverNowMs(currentTimeMillis(), _serverOffset.value),
+        )
 
     private fun manageDriftLoop(isPlaying: Boolean) {
         if (isPlaying) {
@@ -161,10 +159,9 @@ class SyncEngine(
                     val expected = expectedPositionMs(state)
                     // Past the end of the track the player sits in its ended state;
                     // re-seeking there just re-triggers ended events.
-                    if (state.durationMs > 0 && expected >= state.durationMs) continue
-                    val diff = abs(player.currentPositionMs() - expected)
-                    if (diff > Constants.DRIFT_THRESHOLD_MS) {
-                        player.seekTo(expected.coerceAtLeast(0L))
+                    if (DriftMath.isPastEnd(expected, state.durationMs)) continue
+                    if (DriftMath.shouldSeek(player.currentPositionMs(), expected)) {
+                        player.seekTo(DriftMath.seekTargetMs(expected))
                     }
                 }
             }
