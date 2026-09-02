@@ -9,6 +9,9 @@ so the APK actually runs once you build it.
 2. Name it whatever (`syncbeats`). Disable Analytics — we don't need it.
 3. In the project, click **Add app → Android**.
    - Package name: `com.example.myapplicationmusicsharing`
+   (Yes, that differs from the `io.github.meko123456.syncbeats` package in the source. The
+   applicationId is what Firebase keys on, so it changes only once the new one is
+   registered there — see issue #3.)
    - App nickname: anything (e.g. `SyncBeats`)
    - Leave the SHA-1 field blank (we don't use Google sign-in).
 4. Download **`google-services.json`** and drop it into `app/`

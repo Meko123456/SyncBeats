@@ -79,10 +79,14 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.myapplicationmusicsharing"
+    namespace = "io.github.meko123456.syncbeats"
     compileSdk = 36
 
     defaultConfig {
+        // Still com.example: the applicationId is the identity Firebase and the Play Store key
+        // off, so changing it needs the new package registered in the Firebase console and a
+        // fresh google-services.json first, and it makes the installed app a different app.
+        // Tracked on issue #3. The source package and namespace are already renamed.
         applicationId = "com.example.myapplicationmusicsharing"
         minSdk = 26
         targetSdk = 36

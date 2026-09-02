@@ -59,6 +59,9 @@ The project builds without Firebase credentials, but it needs them at runtime.
 
 1. Go to <https://console.firebase.google.com> and create a project.
 2. Add an **Android app** with package name `com.example.myapplicationmusicsharing`.
+   (Yes, that differs from the `io.github.meko123456.syncbeats` package in the source. The
+   applicationId is what Firebase keys on, so it changes only once the new one is
+   registered there — see issue #3.)
 3. Download `google-services.json` and put it in the `composeApp/` directory.
 4. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
 5. In **Build → Realtime Database**, create a database, then open the **Rules** tab
