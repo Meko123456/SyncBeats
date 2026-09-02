@@ -75,7 +75,7 @@ class RoomCodeTest {
     }
 
     @Test
-    fun `each look-alike is caught, not just the first one in the string`() {
+    fun `every look-alike is caught - not only the first one in the string`() {
         for (character in RoomCode.LOOKALIKES) {
             val problem = RoomCode.problemWith("ABC${character}23")
             assertTrue(problem is RoomCode.Problem.Lookalike, "$character gave $problem")

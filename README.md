@@ -1,5 +1,8 @@
 # SyncBeats — listen together
 
+[![CI](https://github.com/Meko123456/SyncBeats/actions/workflows/ci.yml/badge.svg)](https://github.com/Meko123456/SyncBeats/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 A Compose Multiplatform app (Android + iOS) where two or more people listen to
 the same music at the same time.
 
