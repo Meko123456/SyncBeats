@@ -34,7 +34,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.myapplicationmusicsharing.Constants
+import com.example.myapplicationmusicsharing.data.RoomCode
 
 @Composable
 fun LobbyScreen(
@@ -133,7 +133,10 @@ fun LobbyScreen(
                     var code by remember { mutableStateOf("") }
                     OutlinedTextField(
                         value = code,
-                        onValueChange = { code = it.uppercase().take(Constants.ROOM_CODE_LENGTH) },
+                        // Normalising as it is typed, rather than truncating: the old
+                        // uppercase().take(6) turned a pasted "ABC-234" into "ABC-23", which then
+                        // looked like a valid six-character code and failed at the lookup.
+                        onValueChange = { code = RoomCode.normalise(it).take(RoomCode.LENGTH) },
                         label = { Text("Room code") },
                         singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -143,7 +146,7 @@ fun LobbyScreen(
                     )
                     OutlinedButton(
                         onClick = { viewModel.joinRoom(code) },
-                        enabled = !state.loading && code.length == Constants.ROOM_CODE_LENGTH,
+                        enabled = !state.loading && RoomCode.isValid(code),
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Join") }
                 }

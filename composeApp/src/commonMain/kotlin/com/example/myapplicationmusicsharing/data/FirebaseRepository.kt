@@ -1,6 +1,5 @@
 package com.example.myapplicationmusicsharing.data
 
-import com.example.myapplicationmusicsharing.Constants
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.database.DatabaseReference
 import dev.gitlive.firebase.database.ServerValue
@@ -89,12 +88,7 @@ class FirebaseRepository {
         return if (snapshot.exists) snapshot.value<RoomMeta?>() else null
     }
 
-    private fun generateRoomCode(): String =
-        buildString {
-            repeat(Constants.ROOM_CODE_LENGTH) {
-                append(Constants.ROOM_CODE_ALPHABET.random(Random))
-            }
-        }
+    private fun generateRoomCode(): String = RoomCode.generate { bound -> Random.nextInt(bound) }
 
     suspend fun joinRoom(roomId: String, userId: String, username: String) {
         val ref = membersRef(roomId).child(userId)

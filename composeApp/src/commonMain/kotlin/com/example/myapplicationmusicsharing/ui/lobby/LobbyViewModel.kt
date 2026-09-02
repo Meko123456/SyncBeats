@@ -2,9 +2,9 @@ package com.example.myapplicationmusicsharing.ui.lobby
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplicationmusicsharing.Constants
 import com.example.myapplicationmusicsharing.data.AuthRepository
 import com.example.myapplicationmusicsharing.data.FirebaseRepository
+import com.example.myapplicationmusicsharing.data.RoomCode
 import com.example.myapplicationmusicsharing.data.SavedRoom
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,9 +70,11 @@ class LobbyViewModel(
     }
 
     fun joinRoom(code: String) {
-        val normalized = code.trim().uppercase()
-        if (normalized.length != Constants.ROOM_CODE_LENGTH) {
-            _local.update { it.copy(error = "Room codes are ${Constants.ROOM_CODE_LENGTH} characters") }
+        val normalized = RoomCode.normalise(code)
+        // Checking the characters too, not just the length: "OO0011" is six characters long, and
+        // querying for it produced "No room found", which blames the room for a typo.
+        RoomCode.problemWith(normalized)?.let { problem ->
+            _local.update { it.copy(error = RoomCode.describe(problem)) }
             return
         }
         viewModelScope.launch {
