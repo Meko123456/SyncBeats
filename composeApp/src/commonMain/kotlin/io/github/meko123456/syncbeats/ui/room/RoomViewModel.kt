@@ -16,6 +16,7 @@ import io.github.meko123456.syncbeats.data.SavedPlaylist
 import io.github.meko123456.syncbeats.data.SearchResult
 import io.github.meko123456.syncbeats.playback.PlayerController
 import io.github.meko123456.syncbeats.sync.SyncEngine
+import io.github.meko123456.syncbeats.ui.ErrorCopy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -85,6 +86,14 @@ class RoomViewModel(
     private val _searching = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _username = MutableStateFlow("")
+
+    init {
+        // The engine reports load and auto-advance failures as data; turning them into a sentence
+        // is this layer's job.
+        viewModelScope.launch {
+            syncEngine.failures.collect { failure -> _error.value = ErrorCopy.of(failure) }
+        }
+    }
 
     private val roomDataFlow = combine(
         firebase.observePlayback(roomId),
@@ -168,7 +177,7 @@ class RoomViewModel(
     private fun connectPlayer() {
         viewModelScope.launch {
             runCatching { playerController.connect() }
-                .onFailure { _error.value = "Player connect failed: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not connect to the player") }
         }
     }
 
@@ -185,7 +194,7 @@ class RoomViewModel(
                 if (connected && !hasLeft) {
                     runCatching {
                         firebase.joinRoom(roomId, user.uid, username)
-                    }.onFailure { _error.value = it.message }
+                    }.onFailure { _error.value = ErrorCopy.of(it, "That did not work") }
                 }
             }
         }
@@ -238,7 +247,7 @@ class RoomViewModel(
                     val name = state.value.meta?.name?.ifBlank { null } ?: "Room $roomId"
                     firebase.saveRoom(uid, roomId, name)
                 }
-            }.onFailure { _error.value = it.message }
+            }.onFailure { _error.value = ErrorCopy.of(it, "That did not work") }
         }
     }
 
@@ -247,7 +256,7 @@ class RoomViewModel(
             _searching.value = true
             runCatching { youtube.search(query) }
                 .onSuccess { _search.value = it }
-                .onFailure { _error.value = it.message }
+                .onFailure { _error.value = ErrorCopy.of(it, "That did not work") }
             _searching.value = false
         }
     }
@@ -322,7 +331,7 @@ class RoomViewModel(
             _libraryLoading.value = true
             runCatching { youtube.playlist(playlist.url) }
                 .onSuccess { _libraryOpened.value = it }
-                .onFailure { _error.value = "Could not load playlist: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not load that playlist") }
             _libraryLoading.value = false
         }
     }
@@ -361,7 +370,7 @@ class RoomViewModel(
             }
             runCatching {
                 remaining.forEach { firebase.addToQueue(roomId, it.toQueueItem(), uid) }
-            }.onFailure { _error.value = it.message }
+            }.onFailure { _error.value = ErrorCopy.of(it, "That did not work") }
         }
     }
 

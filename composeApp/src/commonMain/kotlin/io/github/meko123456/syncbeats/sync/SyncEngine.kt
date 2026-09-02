@@ -14,7 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -35,6 +37,14 @@ class SyncEngine(
 
     private val _resolving = MutableStateFlow(false)
     val resolving: StateFlow<Boolean> = _resolving
+
+    /**
+     * Failures worth telling the listener about. These used to be swallowed by a println, so a
+     * track that could not be resolved simply never started and the room sat there in silence
+     * with no explanation.
+     */
+    private val _failures = MutableSharedFlow<SyncFailure>(extraBufferCapacity = 8)
+    val failures: SharedFlow<SyncFailure> = _failures
 
     private var offsetJob: Job? = null
     private val roomJobs = mutableListOf<Job>()
@@ -128,7 +138,7 @@ class SyncEngine(
                 playWhenReady = state.isPlaying,
             )
         } catch (t: Throwable) {
-            println("SyncEngine: failed to load track ${state.videoId}: ${t.message}")
+            _failures.emit(SyncFailure(SyncFailure.Kind.LOAD_TRACK, state.title, t))
         } finally {
             _resolving.value = false
         }
@@ -197,7 +207,7 @@ class SyncEngine(
                 hostLoadTrack(next)
             }
         } catch (t: Throwable) {
-            println("SyncEngine: auto-advance failed: ${t.message}")
+            _failures.emit(SyncFailure(SyncFailure.Kind.AUTO_ADVANCE, state.title, t))
         } finally {
             advancing = false
         }

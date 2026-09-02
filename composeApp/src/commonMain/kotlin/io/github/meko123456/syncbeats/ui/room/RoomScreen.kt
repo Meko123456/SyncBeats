@@ -152,7 +152,9 @@ fun RoomScreen(
                 }
             }
             state.error?.let { err ->
-                Text("Error: $err", color = MaterialTheme.colorScheme.error)
+                // No "Error:" prefix any more — ErrorCopy produces a sentence that says what
+                // happened and what to do, so labelling it adds nothing.
+                Text(err, color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = viewModel::clearError) { Text("Dismiss") }
             }
         }

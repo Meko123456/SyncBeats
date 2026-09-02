@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.meko123456.syncbeats.data.AuthRepository
 import io.github.meko123456.syncbeats.data.FirebaseRepository
 import io.github.meko123456.syncbeats.data.RoomCode
+import io.github.meko123456.syncbeats.ui.ErrorCopy
 import io.github.meko123456.syncbeats.data.SavedRoom
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,7 +66,7 @@ class LobbyViewModel(
                 code
             }
                 .onSuccess { code -> _local.update { it.copy(loading = false, enterRoomId = code) } }
-                .onFailure { t -> _local.update { it.copy(loading = false, error = t.message) } }
+                .onFailure { t -> _local.update { it.copy(loading = false, error = ErrorCopy.of(t, "That did not work")) } }
         }
     }
 
@@ -89,7 +90,7 @@ class LobbyViewModel(
                         _local.update { it.copy(loading = false, enterRoomId = normalized) }
                     }
                 }
-                .onFailure { t -> _local.update { it.copy(loading = false, error = t.message) } }
+                .onFailure { t -> _local.update { it.copy(loading = false, error = ErrorCopy.of(t, "That did not work")) } }
         }
     }
 
@@ -100,7 +101,7 @@ class LobbyViewModel(
     fun removeSavedRoom(room: SavedRoom) {
         viewModelScope.launch {
             runCatching { firebase.unsaveRoom(uid, room.key) }
-                .onFailure { t -> _local.update { it.copy(error = t.message) } }
+                .onFailure { t -> _local.update { it.copy(error = ErrorCopy.of(t, "That did not work")) } }
         }
     }
 
