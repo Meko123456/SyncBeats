@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SyncBeats" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+      Compose draws everything; this theme exists only so the window behind it is the right colour
+      before the first frame.
+      The parent stays Light rather than a DayNight one on purpose: the platform's DayNight themes
+      only exist from API 29 and minSdk here is 26, and none of their widget styling is used
+      anyway. Day/night comes from the window background colour itself, which resolves out of
+      values-night/ — that is a resource qualifier, so it needs no particular API level.
+    -->
+    <style name="Theme.SyncBeats" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>

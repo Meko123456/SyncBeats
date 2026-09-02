@@ -1,5 +1,6 @@
 package io.github.meko123456.syncbeats.playback
 
+import androidx.core.net.toUri
 import android.content.ComponentName
 import android.content.Context
 import androidx.media3.common.MediaItem
@@ -87,7 +88,7 @@ class AndroidPlayerController(
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
-                    .setArtworkUri(if (thumb.isNotBlank()) android.net.Uri.parse(thumb) else null)
+                    .setArtworkUri(if (thumb.isNotBlank()) thumb.toUri() else null)
                     .build()
             )
             .build()
