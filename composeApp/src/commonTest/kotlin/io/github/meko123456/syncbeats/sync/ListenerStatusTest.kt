@@ -87,7 +87,7 @@ class ListenerStatusTest {
     }
 
     @Test
-    fun `a player that has not bound yet is connecting, not buffering`() {
+    fun `a player that has not bound yet is connecting rather than buffering`() {
         assertEquals(
             ListenerStatus.Connecting,
             ListenerStatus.of(snapshot(playerConnected = false, playerIsPlaying = false)),

@@ -45,7 +45,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Compile the iOS targets
-        run: ./gradlew :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compileKotlinIosArm64 --stacktrace
+        run: ./gradlew :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compileKotlinIosArm64 :composeApp:compileTestKotlinIosSimulatorArm64 --stacktrace
 
   rules:
     # The security rules are the only thing between a room and anyone with an account, so they get
