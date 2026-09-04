@@ -75,6 +75,15 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+        androidInstrumentedTest.dependencies {
+            implementation(libs.junit)
+            implementation(libs.androidx.test.runner)
+            implementation(libs.androidx.test.core)
+            implementation(libs.androidx.test.junit)
+            implementation(libs.media3.exoplayer)
+            implementation(libs.media3.session)
+            implementation(libs.media3.common)
+        }
     }
 }
 
@@ -92,6 +101,7 @@ android {
         targetSdk = 36
         versionCode = 2
         versionName = "2.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
