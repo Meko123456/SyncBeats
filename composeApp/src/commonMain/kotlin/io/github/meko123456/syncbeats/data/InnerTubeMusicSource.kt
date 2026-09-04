@@ -70,27 +70,7 @@ class InnerTubeMusicSource(private val http: HttpClient) : MusicSource {
             put("query", query)
             put("params", "EgIQAQ==") // videos only
         }
-        val root = call("search", body)
-        val sections = root["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"].array
-        val results = mutableListOf<SearchResult>()
-        for (section in sections) {
-            val items = section["itemSectionRenderer"]["contents"].array
-            for (item in items) {
-                val video = item["videoRenderer"] as? JsonObject ?: continue
-                val videoId = video["videoId"].str ?: continue
-                val lengthText = video["lengthText"]["simpleText"].str ?: continue // no length = live
-                results += SearchResult(
-                    videoId = videoId,
-                    title = video["title"]["runs"][0]["text"].str ?: continue,
-                    artist = video["ownerText"]["runs"][0]["text"].str ?: "",
-                    thumbnailUrl = video["thumbnail"]["thumbnails"].array.lastOrNull()
-                        ?.get("url").str ?: "",
-                    durationMs = parseLengthMs(lengthText),
-                )
-                if (results.size >= 25) return results
-            }
-        }
-        return results
+        return InnerTubeParser.parseSearch(call("search", body))
     }
 
     override suspend fun resolveAudioStream(videoId: String): ResolvedStream {
@@ -100,22 +80,7 @@ class InnerTubeMusicSource(private val http: HttpClient) : MusicSource {
             put("contentCheckOk", true)
             put("racyCheckOk", true)
         }
-        val root = call("player", body, ios = true)
-        val status = root["playabilityStatus"]["status"].str
-        check(status == "OK") {
-            "Video not playable: $status (${root["playabilityStatus"]["reason"].str ?: "no reason"})"
-        }
-        val formats = root["streamingData"]["adaptiveFormats"].array
-        val best = formats
-            .filter { it["mimeType"].str.orEmpty().startsWith("audio/") && it["url"].str != null }
-            .maxByOrNull { it["bitrate"].str?.toLongOrNull() ?: (it["bitrate"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull() ?: 0L }
-            ?: error("No audio stream in response for $videoId")
-        val durationMs = (root["videoDetails"]["lengthSeconds"].str?.toLongOrNull() ?: 0L) * 1000L
-        return ResolvedStream(
-            url = best["url"].str!!,
-            mimeType = best["mimeType"].str?.substringBefore(";"),
-            durationMs = durationMs,
-        )
+        return InnerTubeParser.parseStream(call("player", body, ios = true), videoId)
     }
 
     override suspend fun trending(): List<SearchResult> = search("top songs this week")
@@ -126,41 +91,7 @@ class InnerTubeMusicSource(private val http: HttpClient) : MusicSource {
             put("context", webContext())
             put("browseId", "VL$listId")
         }
-        val root = call("browse", body)
-        val tab = root["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][0]["tabRenderer"]["content"]
-        val section = tab["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]
-        val items = section["playlistVideoListRenderer"]["contents"].array
-        val tracks = items.mapNotNull { item ->
-            val video = item["playlistVideoRenderer"] as? JsonObject ?: return@mapNotNull null
-            val videoId = video["videoId"].str ?: return@mapNotNull null
-            SearchResult(
-                videoId = videoId,
-                title = video["title"]["runs"][0]["text"].str ?: return@mapNotNull null,
-                artist = video["shortBylineText"]["runs"][0]["text"].str ?: "",
-                thumbnailUrl = video["thumbnail"]["thumbnails"].array.lastOrNull()?.get("url").str ?: "",
-                durationMs = (video["lengthSeconds"].str?.toLongOrNull() ?: 0L) * 1000L,
-            )
-        }
-        if (tracks.isEmpty()) error("Playlist is empty or not accessible (is it public/unlisted?)")
-        val title = root["metadata"]["playlistMetadataRenderer"]["title"].str
-            ?: root["header"]["playlistHeaderRenderer"]["title"]["simpleText"].str
-            ?: "Playlist"
-        return PlaylistDetails(
-            url = url.trim(),
-            title = title,
-            thumbnailUrl = tracks.first().thumbnailUrl,
-            tracks = tracks,
-        )
-    }
-
-    private fun parseLengthMs(text: String): Long {
-        val parts = text.split(":").mapNotNull { it.trim().toLongOrNull() }
-        return when (parts.size) {
-            3 -> (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000
-            2 -> (parts[0] * 60 + parts[1]) * 1000
-            1 -> parts[0] * 1000
-            else -> 0L
-        }
+        return InnerTubeParser.parsePlaylist(call("browse", body), url)
     }
 
     private companion object {
@@ -171,16 +102,3 @@ class InnerTubeMusicSource(private val http: HttpClient) : MusicSource {
     }
 }
 
-// ── tiny JsonElement navigation helpers ──
-
-private operator fun JsonElement?.get(key: String): JsonElement? =
-    (this as? JsonObject)?.get(key)
-
-private operator fun JsonElement?.get(index: Int): JsonElement? =
-    (this as? JsonArray)?.getOrNull(index)
-
-private val JsonElement?.array: List<JsonElement>
-    get() = (this as? JsonArray) ?: emptyList()
-
-private val JsonElement?.str: String?
-    get() = (this as? JsonPrimitive)?.contentOrNull
