@@ -1,7 +1,7 @@
 package io.github.meko123456.syncbeats.data
 
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class GoogleTokens(
     val idToken: String,

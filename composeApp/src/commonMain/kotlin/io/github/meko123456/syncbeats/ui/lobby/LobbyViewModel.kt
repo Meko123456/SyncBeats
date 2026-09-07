@@ -2,12 +2,11 @@ package io.github.meko123456.syncbeats.ui.lobby
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.model.RoomCode
+import io.github.meko123456.syncbeats.core.model.SavedRoom
 import io.github.meko123456.syncbeats.data.AuthRepository
 import io.github.meko123456.syncbeats.data.FirebaseRepository
-import io.github.meko123456.syncbeats.data.RoomCode
 import io.github.meko123456.syncbeats.ui.ErrorCopy
-import io.github.meko123456.syncbeats.data.SavedRoom
-
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +14,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 data class LobbyUiState(
     val savedRooms: List<SavedRoom> = emptyList(),

@@ -1,11 +1,11 @@
 package io.github.meko123456.syncbeats.data
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Recorded response shapes.

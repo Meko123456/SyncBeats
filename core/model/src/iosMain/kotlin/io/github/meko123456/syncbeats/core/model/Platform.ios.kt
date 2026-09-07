@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.util
+package io.github.meko123456.syncbeats.core.model
 
 import platform.Foundation.NSDate
 import platform.Foundation.timeIntervalSince1970

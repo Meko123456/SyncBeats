@@ -56,15 +56,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.meko123456.syncbeats.core.model.QueueItem
+import io.github.meko123456.syncbeats.core.model.SearchResult
+import io.github.meko123456.syncbeats.core.model.currentTimeMillis
 import io.github.meko123456.syncbeats.sync.ListenerStatus
-import io.github.meko123456.syncbeats.data.QueueItem
-import io.github.meko123456.syncbeats.data.SearchResult
 import io.github.meko123456.syncbeats.ui.PlatformBackHandler
-import io.github.meko123456.syncbeats.util.currentTimeMillis
 import kotlinx.coroutines.delay
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
@@ -205,11 +205,11 @@ fun RoomScreen(
 @Composable
 private fun LibrarySheet(
     library: LibraryState,
-    onOpenPlaylist: (io.github.meko123456.syncbeats.data.SavedPlaylist) -> Unit,
+    onOpenPlaylist: (io.github.meko123456.syncbeats.core.model.SavedPlaylist) -> Unit,
     onClosePlaylist: () -> Unit,
     onQueueTrack: (SearchResult) -> Unit,
-    onQueueHistory: (io.github.meko123456.syncbeats.data.HistoryItem) -> Unit,
-    onQueueAll: (io.github.meko123456.syncbeats.data.PlaylistDetails) -> Unit,
+    onQueueHistory: (io.github.meko123456.syncbeats.core.model.HistoryItem) -> Unit,
+    onQueueAll: (io.github.meko123456.syncbeats.core.model.PlaylistDetails) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)

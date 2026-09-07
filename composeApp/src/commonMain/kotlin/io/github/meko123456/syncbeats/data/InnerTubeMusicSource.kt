@@ -1,5 +1,8 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.model.PlaylistDetails
+import io.github.meko123456.syncbeats.core.model.ResolvedStream
+import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post

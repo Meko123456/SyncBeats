@@ -1,13 +1,13 @@
 package io.github.meko123456.syncbeats.data
 
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
-import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 class NewPipeDownloaderImpl private constructor(
     private val client: OkHttpClient,

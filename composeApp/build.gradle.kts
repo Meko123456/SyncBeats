@@ -28,6 +28,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:model"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)

@@ -1,5 +1,9 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.model.PlaylistDetails
+import io.github.meko123456.syncbeats.core.model.ResolvedStream
+import io.github.meko123456.syncbeats.core.model.SearchResult
+
 /**
  * Where music metadata and streams come from. Android implements this with
  * NewPipe Extractor; iOS with a lightweight InnerTube client.

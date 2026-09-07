@@ -1,5 +1,8 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.model.PlaylistDetails
+import io.github.meko123456.syncbeats.core.model.ResolvedStream
+import io.github.meko123456.syncbeats.core.model.SearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.NewPipe

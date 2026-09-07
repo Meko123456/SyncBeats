@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats
+package io.github.meko123456.syncbeats.core.model
 
 object Constants {
     const val ROOM_CODE_LENGTH = 6

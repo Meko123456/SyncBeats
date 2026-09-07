@@ -1,6 +1,5 @@
-package io.github.meko123456.syncbeats.data
+package io.github.meko123456.syncbeats.core.model
 
-import io.github.meko123456.syncbeats.Constants
 
 /**
  * Room codes: generating them, and judging what a human typed.

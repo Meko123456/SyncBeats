@@ -1,6 +1,6 @@
 package io.github.meko123456.syncbeats.sync
 
-import io.github.meko123456.syncbeats.Constants
+import io.github.meko123456.syncbeats.core.model.Constants
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

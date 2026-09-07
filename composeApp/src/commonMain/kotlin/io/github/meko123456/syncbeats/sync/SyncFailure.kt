@@ -1,5 +1,6 @@
 package io.github.meko123456.syncbeats.sync
 
+
 /**
  * Something went wrong while driving playback.
  *

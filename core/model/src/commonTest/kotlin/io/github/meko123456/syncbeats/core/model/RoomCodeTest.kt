@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.data
+package io.github.meko123456.syncbeats.core.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

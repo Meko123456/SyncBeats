@@ -2,16 +2,16 @@ package io.github.meko123456.syncbeats.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.model.HistoryItem
+import io.github.meko123456.syncbeats.core.model.PlaylistDetails
+import io.github.meko123456.syncbeats.core.model.QueueItem
+import io.github.meko123456.syncbeats.core.model.SavedPlaylist
+import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.data.AccountPlaylist
 import io.github.meko123456.syncbeats.data.AuthRepository
 import io.github.meko123456.syncbeats.data.FirebaseRepository
 import io.github.meko123456.syncbeats.data.GoogleAuthController
-import io.github.meko123456.syncbeats.data.HistoryItem
 import io.github.meko123456.syncbeats.data.MusicSource
-import io.github.meko123456.syncbeats.data.PlaylistDetails
-import io.github.meko123456.syncbeats.data.QueueItem
-import io.github.meko123456.syncbeats.data.SavedPlaylist
-import io.github.meko123456.syncbeats.data.SearchResult
 import io.github.meko123456.syncbeats.data.YouTubeAccountRepository
 import io.github.meko123456.syncbeats.data.signInSuspend
 import kotlinx.coroutines.flow.MutableStateFlow
