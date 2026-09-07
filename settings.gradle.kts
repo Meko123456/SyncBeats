@@ -28,3 +28,4 @@ rootProject.name = "SyncBeats"
 include(":composeApp")
 include(":core:model")
 include(":core:domain")
+include(":core:data")
