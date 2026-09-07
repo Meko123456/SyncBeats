@@ -1,5 +1,6 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.domain.music.extractPlaylistId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

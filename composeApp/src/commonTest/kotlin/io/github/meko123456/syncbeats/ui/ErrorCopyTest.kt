@@ -1,6 +1,6 @@
 package io.github.meko123456.syncbeats.ui
 
-import io.github.meko123456.syncbeats.sync.SyncFailure
+import io.github.meko123456.syncbeats.core.domain.sync.SyncFailure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

@@ -2,6 +2,7 @@
 
 package io.github.meko123456.syncbeats.playback
 
+import io.github.meko123456.syncbeats.core.domain.playback.PlayerController
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

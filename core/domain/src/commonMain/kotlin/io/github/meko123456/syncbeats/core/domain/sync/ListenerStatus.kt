@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.sync
+package io.github.meko123456.syncbeats.core.domain.sync
 
 import io.github.meko123456.syncbeats.core.model.Constants
 import kotlin.math.abs

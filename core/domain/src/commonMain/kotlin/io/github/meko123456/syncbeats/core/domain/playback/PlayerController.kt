@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.playback
+package io.github.meko123456.syncbeats.core.domain.playback
 
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow

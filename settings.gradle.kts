@@ -27,3 +27,4 @@ dependencyResolutionManagement {
 rootProject.name = "SyncBeats"
 include(":composeApp")
 include(":core:model")
+include(":core:domain")

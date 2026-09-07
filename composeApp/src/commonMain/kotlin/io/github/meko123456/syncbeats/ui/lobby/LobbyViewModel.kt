@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.meko123456.syncbeats.core.model.RoomCode
 import io.github.meko123456.syncbeats.core.model.SavedRoom
-import io.github.meko123456.syncbeats.data.AuthRepository
-import io.github.meko123456.syncbeats.data.FirebaseRepository
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 import io.github.meko123456.syncbeats.ui.ErrorCopy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,8 +31,8 @@ private data class LobbyLocal(
 
 
 class LobbyViewModel(
-    private val firebase: FirebaseRepository,
-    private val authRepo: AuthRepository,
+    private val firebase: RoomRepository,
+    private val authRepo: AuthGateway,
 ) : ViewModel() {
 
     private val uid: String get() = authRepo.currentUser()?.uid.orEmpty()

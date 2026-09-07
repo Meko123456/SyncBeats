@@ -1,14 +1,14 @@
-package io.github.meko123456.syncbeats.sync
+package io.github.meko123456.syncbeats.core.domain.sync
 
 import io.github.meko123456.syncbeats.core.model.Constants
 import io.github.meko123456.syncbeats.core.model.PlaybackState
 import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.RoomMeta
 import io.github.meko123456.syncbeats.core.model.currentTimeMillis
-import io.github.meko123456.syncbeats.data.AuthRepository
-import io.github.meko123456.syncbeats.data.FirebaseRepository
-import io.github.meko123456.syncbeats.data.MusicSource
-import io.github.meko123456.syncbeats.playback.PlayerController
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
+import io.github.meko123456.syncbeats.core.domain.music.MusicSource
+import io.github.meko123456.syncbeats.core.domain.playback.PlayerController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,10 +22,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SyncEngine(
-    private val firebase: FirebaseRepository,
+    private val firebase: RoomRepository,
     private val music: MusicSource,
     private val player: PlayerController,
-    private val auth: AuthRepository,
+    private val auth: AuthGateway,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 

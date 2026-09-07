@@ -1,13 +1,9 @@
-package io.github.meko123456.syncbeats.data
+package io.github.meko123456.syncbeats.core.domain.repository
 
+import io.github.meko123456.syncbeats.core.model.GoogleTokens
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-class GoogleTokens(
-    val idToken: String,
-    val accessToken: String?,
-    val displayName: String?,
-)
 
 /**
  * Platform Google Sign-In. Callback-based (not suspend) so the iOS side can be

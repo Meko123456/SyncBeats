@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.data
+package io.github.meko123456.syncbeats.core.domain.music
 
 import io.github.meko123456.syncbeats.core.model.PlaylistDetails
 import io.github.meko123456.syncbeats.core.model.ResolvedStream

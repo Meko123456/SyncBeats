@@ -2,9 +2,9 @@ package io.github.meko123456.syncbeats.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.meko123456.syncbeats.data.AuthRepository
-import io.github.meko123456.syncbeats.data.GoogleAuthController
-import io.github.meko123456.syncbeats.data.signInSuspend
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +20,7 @@ data class AuthUiState(
 )
 
 class AuthViewModel(
-    private val authRepo: AuthRepository,
+    private val authRepo: AuthGateway,
     private val google: GoogleAuthController,
 ) : ViewModel() {
 

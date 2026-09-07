@@ -6,18 +6,28 @@ import dev.gitlive.firebase.auth.GoogleAuthProvider
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.database.ServerValue
 import dev.gitlive.firebase.database.database
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.model.AuthUser
+import io.github.meko123456.syncbeats.core.model.GoogleTokens
 import kotlinx.coroutines.flow.first
 
-class AuthRepository {
+/**
+ * [AuthGateway] over Firebase Auth.
+ *
+ * Maps GitLive's [FirebaseUser] to the domain's [AuthUser] at this boundary, which is what keeps
+ * Firebase out of the screens and the sync engine — they only ever needed uid, email and
+ * displayName.
+ */
+class AuthRepository : AuthGateway {
 
-    fun currentUser(): FirebaseUser? = Firebase.auth.currentUser
+    override fun currentUser(): AuthUser? = Firebase.auth.currentUser?.toAuthUser()
 
-    suspend fun signIn(email: String, password: String): FirebaseUser {
+    override suspend fun signIn(email: String, password: String): AuthUser {
         val result = Firebase.auth.signInWithEmailAndPassword(email, password)
-        return result.user ?: error("Sign-in returned no user")
+        return (result.user ?: error("Sign-in returned no user")).toAuthUser()
     }
 
-    suspend fun signUp(email: String, password: String, username: String): FirebaseUser {
+    override suspend fun signUp(email: String, password: String, username: String): AuthUser {
         val result = Firebase.auth.createUserWithEmailAndPassword(email, password)
         val user = result.user ?: error("Sign-up returned no user")
         Firebase.database.reference("users/${user.uid}").setValue(
@@ -26,11 +36,11 @@ class AuthRepository {
                 "createdAt" to ServerValue.TIMESTAMP,
             )
         )
-        return user
+        return user.toAuthUser()
     }
 
     /** Signs into Firebase with Google tokens; creates the profile on first login. */
-    suspend fun signInWithGoogle(tokens: GoogleTokens): FirebaseUser {
+    override suspend fun signInWithGoogle(tokens: GoogleTokens): AuthUser {
         val credential = GoogleAuthProvider.credential(tokens.idToken, tokens.accessToken)
         val result = Firebase.auth.signInWithCredential(credential)
         val user = result.user ?: error("Google sign-in returned no user")
@@ -42,14 +52,16 @@ class AuthRepository {
                 )
             )
         }
-        return user
+        return user.toAuthUser()
     }
 
     /** Username chosen at sign-up, or null if the profile is missing. */
-    suspend fun fetchUsername(uid: String): String? =
+    override suspend fun fetchUsername(uid: String): String? =
         runCatching {
             Firebase.database.reference("users/$uid/username").valueEvents.first().value<String?>()
         }.getOrNull()
 
-    suspend fun signOut() = Firebase.auth.signOut()
+    override suspend fun signOut() = Firebase.auth.signOut()
 }
+
+private fun FirebaseUser.toAuthUser() = AuthUser(uid = uid, email = email, displayName = displayName)

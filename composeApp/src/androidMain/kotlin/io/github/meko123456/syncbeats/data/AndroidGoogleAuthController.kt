@@ -16,6 +16,8 @@ import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.model.GoogleTokens
 import java.lang.ref.WeakReference
 import kotlin.coroutines.resume
 import kotlinx.coroutines.launch

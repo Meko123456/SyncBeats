@@ -51,10 +51,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.meko123456.syncbeats.core.model.AccountPlaylist
 import io.github.meko123456.syncbeats.core.model.HistoryItem
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
-import io.github.meko123456.syncbeats.data.AccountPlaylist
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

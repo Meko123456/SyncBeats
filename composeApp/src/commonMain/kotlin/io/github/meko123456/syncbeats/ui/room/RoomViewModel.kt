@@ -2,6 +2,12 @@ package io.github.meko123456.syncbeats.ui.room
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.domain.music.MusicSource
+import io.github.meko123456.syncbeats.core.domain.playback.PlayerController
+import io.github.meko123456.syncbeats.core.domain.sync.DriftMath
+import io.github.meko123456.syncbeats.core.domain.sync.ListenerSnapshot
+import io.github.meko123456.syncbeats.core.domain.sync.ListenerStatus
+import io.github.meko123456.syncbeats.core.domain.sync.SyncEngine
 import io.github.meko123456.syncbeats.core.model.ChatMessage
 import io.github.meko123456.syncbeats.core.model.HistoryItem
 import io.github.meko123456.syncbeats.core.model.Member
@@ -12,14 +18,8 @@ import io.github.meko123456.syncbeats.core.model.RoomMeta
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.core.model.currentTimeMillis
-import io.github.meko123456.syncbeats.data.AuthRepository
-import io.github.meko123456.syncbeats.data.FirebaseRepository
-import io.github.meko123456.syncbeats.data.MusicSource
-import io.github.meko123456.syncbeats.playback.PlayerController
-import io.github.meko123456.syncbeats.sync.DriftMath
-import io.github.meko123456.syncbeats.sync.ListenerSnapshot
-import io.github.meko123456.syncbeats.sync.ListenerStatus
-import io.github.meko123456.syncbeats.sync.SyncEngine
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 import io.github.meko123456.syncbeats.ui.ErrorCopy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -82,9 +82,9 @@ private data class UiExtras(
 class RoomViewModel(
     private val roomId: String,
     private val autoplay: Boolean,
-    private val firebase: FirebaseRepository,
+    private val firebase: RoomRepository,
     private val youtube: MusicSource,
-    private val authRepo: AuthRepository,
+    private val authRepo: AuthGateway,
     private val syncEngine: SyncEngine,
     private val playerController: PlayerController,
     private val appScope: CoroutineScope,

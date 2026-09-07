@@ -1,9 +1,15 @@
 package io.github.meko123456.syncbeats.di
 
+import io.github.meko123456.syncbeats.core.domain.music.MusicSource
+import io.github.meko123456.syncbeats.core.domain.playback.PlayerController
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.sync.SyncEngine
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
+import io.github.meko123456.syncbeats.core.domain.repository.YouTubeAccountGateway
 import io.github.meko123456.syncbeats.data.AuthRepository
 import io.github.meko123456.syncbeats.data.FirebaseRepository
 import io.github.meko123456.syncbeats.data.YouTubeAccountRepository
-import io.github.meko123456.syncbeats.sync.SyncEngine
 import io.github.meko123456.syncbeats.ui.auth.AuthViewModel
 import io.github.meko123456.syncbeats.ui.home.HomeViewModel
 import io.github.meko123456.syncbeats.ui.lobby.LobbyViewModel
@@ -29,9 +35,9 @@ val commonModule = module {
     single(APP_SCOPE) { CoroutineScope(SupervisorJob() + Dispatchers.Main) }
 
     single { HttpClient() }
-    single { FirebaseRepository() }
-    single { AuthRepository() }
-    single { YouTubeAccountRepository(get(), get()) }
+    single<RoomRepository> { FirebaseRepository() }
+    single<AuthGateway> { AuthRepository() }
+    single<YouTubeAccountGateway> { YouTubeAccountRepository(get(), get()) }
     single { SyncEngine(get(), get(), get(), get()) }
 
     viewModel { AuthViewModel(get(), get()) }

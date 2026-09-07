@@ -1,5 +1,7 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
+
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.database.DatabaseReference
 import dev.gitlive.firebase.database.ServerValue
@@ -19,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-class FirebaseRepository {
+class FirebaseRepository : RoomRepository {
 
     private val db get() = Firebase.database
 
@@ -31,25 +33,25 @@ class FirebaseRepository {
     private fun metaRef(roomId: String) = roomRef(roomId).child("meta")
 
     /** True while this client has a live connection to the Firebase backend. */
-    fun observeConnected(): Flow<Boolean> =
+    override fun observeConnected(): Flow<Boolean> =
         db.reference(".info/connected").valueEvents.map { it.value<Boolean?>() ?: false }
 
-    fun observeServerTimeOffset(): Flow<Long> =
+    override fun observeServerTimeOffset(): Flow<Long> =
         db.reference(".info/serverTimeOffset").valueEvents.map {
             (it.value<Double?>() ?: 0.0).toLong()
         }
 
-    fun observePlayback(roomId: String): Flow<PlaybackState?> =
+    override fun observePlayback(roomId: String): Flow<PlaybackState?> =
         playbackRef(roomId).valueEvents.map { snapshot ->
             if (snapshot.exists) snapshot.value<PlaybackState?>() else null
         }
 
-    fun observeMeta(roomId: String): Flow<RoomMeta?> =
+    override fun observeMeta(roomId: String): Flow<RoomMeta?> =
         metaRef(roomId).valueEvents.map { snapshot ->
             if (snapshot.exists) snapshot.value<RoomMeta?>() else null
         }
 
-    fun observeQueue(roomId: String): Flow<List<QueueItem>> =
+    override fun observeQueue(roomId: String): Flow<List<QueueItem>> =
         queueRef(roomId).orderByChild("addedAt").valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<QueueItem>() }.getOrNull()
@@ -57,7 +59,7 @@ class FirebaseRepository {
             }
         }
 
-    fun observeMembers(roomId: String): Flow<List<Member>> =
+    override fun observeMembers(roomId: String): Flow<List<Member>> =
         membersRef(roomId).valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<Member>() }.getOrNull()
@@ -65,7 +67,7 @@ class FirebaseRepository {
             }
         }
 
-    fun observeChat(roomId: String): Flow<List<ChatMessage>> =
+    override fun observeChat(roomId: String): Flow<List<ChatMessage>> =
         chatRef(roomId).orderByChild("sentAt").limitToLast(100).valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<ChatMessage>() }.getOrNull()
@@ -74,7 +76,7 @@ class FirebaseRepository {
         }
 
     /** Creates a room with a fresh shareable code and returns that code. */
-    suspend fun createRoom(hostId: String, name: String): String {
+    override suspend fun createRoom(hostId: String, name: String): String {
         repeat(5) {
             val code = generateRoomCode()
             val ref = metaRef(code)
@@ -93,14 +95,14 @@ class FirebaseRepository {
     }
 
     /** Returns the room's meta, or null if no room exists for this code. */
-    suspend fun findRoom(roomId: String): RoomMeta? {
+    override suspend fun findRoom(roomId: String): RoomMeta? {
         val snapshot = metaRef(roomId).valueEvents.first()
         return if (snapshot.exists) snapshot.value<RoomMeta?>() else null
     }
 
     private fun generateRoomCode(): String = RoomCode.generate { bound -> Random.nextInt(bound) }
 
-    suspend fun joinRoom(roomId: String, userId: String, username: String) {
+    override suspend fun joinRoom(roomId: String, userId: String, username: String) {
         val ref = membersRef(roomId).child(userId)
         // Arm the cleanup before publishing presence so a drop right after the
         // write can never leave a ghost member behind.
@@ -113,17 +115,17 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun leaveRoom(roomId: String, userId: String) {
+    override suspend fun leaveRoom(roomId: String, userId: String) {
         val ref = membersRef(roomId).child(userId)
         ref.onDisconnect().cancel()
         ref.removeValue()
     }
 
-    suspend fun takeControl(roomId: String, userId: String) {
+    override suspend fun takeControl(roomId: String, userId: String) {
         metaRef(roomId).child("hostId").setValue(userId)
     }
 
-    suspend fun setPlayback(roomId: String, state: PlaybackState) {
+    override suspend fun setPlayback(roomId: String, state: PlaybackState) {
         playbackRef(roomId).setValue(
             mapOf(
                 "videoId" to state.videoId,
@@ -138,7 +140,7 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun updatePlayingFlag(roomId: String, isPlaying: Boolean, positionMs: Long) {
+    override suspend fun updatePlayingFlag(roomId: String, isPlaying: Boolean, positionMs: Long) {
         playbackRef(roomId).updateChildren(
             mapOf(
                 "isPlaying" to isPlaying,
@@ -148,7 +150,7 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun seek(roomId: String, positionMs: Long, isPlaying: Boolean) {
+    override suspend fun seek(roomId: String, positionMs: Long, isPlaying: Boolean) {
         playbackRef(roomId).updateChildren(
             mapOf(
                 "positionMs" to positionMs,
@@ -158,7 +160,7 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun addToQueue(roomId: String, item: QueueItem, addedBy: String) {
+    override suspend fun addToQueue(roomId: String, item: QueueItem, addedBy: String) {
         queueRef(roomId).push().setValue(
             mapOf(
                 "videoId" to item.videoId,
@@ -172,11 +174,11 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun removeFromQueue(roomId: String, key: String) {
+    override suspend fun removeFromQueue(roomId: String, key: String) {
         queueRef(roomId).child(key).removeValue()
     }
 
-    suspend fun sendChat(roomId: String, userId: String, username: String, text: String) {
+    override suspend fun sendChat(roomId: String, userId: String, username: String, text: String) {
         chatRef(roomId).push().setValue(
             mapOf(
                 "userId" to userId,
@@ -193,7 +195,7 @@ class FirebaseRepository {
     private fun historyRef(uid: String) = db.reference("users/$uid/history")
     private fun savedRoomsRef(uid: String) = db.reference("users/$uid/savedRooms")
 
-    fun observeSavedRooms(uid: String): Flow<List<SavedRoom>> =
+    override fun observeSavedRooms(uid: String): Flow<List<SavedRoom>> =
         savedRoomsRef(uid).orderByChild("savedAt").valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<SavedRoom>() }.getOrNull()
@@ -201,7 +203,7 @@ class FirebaseRepository {
             }
         }
 
-    suspend fun saveRoom(uid: String, roomId: String, name: String) {
+    override suspend fun saveRoom(uid: String, roomId: String, name: String) {
         savedRoomsRef(uid).child(roomId).setValue(
             mapOf(
                 "name" to name,
@@ -210,11 +212,11 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun unsaveRoom(uid: String, roomId: String) {
+    override suspend fun unsaveRoom(uid: String, roomId: String) {
         savedRoomsRef(uid).child(roomId).removeValue()
     }
 
-    fun observePlaylists(uid: String): Flow<List<SavedPlaylist>> =
+    override fun observePlaylists(uid: String): Flow<List<SavedPlaylist>> =
         playlistsRef(uid).orderByChild("addedAt").valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<SavedPlaylist>() }.getOrNull()
@@ -222,7 +224,7 @@ class FirebaseRepository {
             }.reversed()
         }
 
-    suspend fun savePlaylist(uid: String, details: PlaylistDetails) {
+    override suspend fun savePlaylist(uid: String, details: PlaylistDetails) {
         playlistsRef(uid).push().setValue(
             mapOf(
                 "url" to details.url,
@@ -234,11 +236,11 @@ class FirebaseRepository {
         )
     }
 
-    suspend fun removePlaylist(uid: String, key: String) {
+    override suspend fun removePlaylist(uid: String, key: String) {
         playlistsRef(uid).child(key).removeValue()
     }
 
-    fun observeHistory(uid: String): Flow<List<HistoryItem>> =
+    override fun observeHistory(uid: String): Flow<List<HistoryItem>> =
         historyRef(uid).orderByChild("playedAt").limitToLast(15).valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<HistoryItem>() }.getOrNull()
@@ -246,7 +248,7 @@ class FirebaseRepository {
             }.sortedByDescending { it.playedAt }
         }
 
-    suspend fun logHistory(uid: String, state: PlaybackState) {
+    override suspend fun logHistory(uid: String, state: PlaybackState) {
         if (state.videoId.isBlank()) return
         historyRef(uid).push().setValue(
             mapOf(

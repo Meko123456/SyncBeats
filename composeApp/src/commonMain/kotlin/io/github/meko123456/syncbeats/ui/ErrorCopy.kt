@@ -1,6 +1,6 @@
 package io.github.meko123456.syncbeats.ui
 
-import io.github.meko123456.syncbeats.sync.SyncFailure
+import io.github.meko123456.syncbeats.core.domain.sync.SyncFailure
 
 /**
  * Turns a thrown exception into a sentence a listener can act on.

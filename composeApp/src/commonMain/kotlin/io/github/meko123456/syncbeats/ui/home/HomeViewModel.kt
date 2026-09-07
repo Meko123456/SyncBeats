@@ -2,18 +2,18 @@ package io.github.meko123456.syncbeats.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.domain.music.MusicSource
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
+import io.github.meko123456.syncbeats.core.model.AccountPlaylist
 import io.github.meko123456.syncbeats.core.model.HistoryItem
 import io.github.meko123456.syncbeats.core.model.PlaylistDetails
 import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
-import io.github.meko123456.syncbeats.data.AccountPlaylist
-import io.github.meko123456.syncbeats.data.AuthRepository
-import io.github.meko123456.syncbeats.data.FirebaseRepository
-import io.github.meko123456.syncbeats.data.GoogleAuthController
-import io.github.meko123456.syncbeats.data.MusicSource
-import io.github.meko123456.syncbeats.data.YouTubeAccountRepository
-import io.github.meko123456.syncbeats.data.signInSuspend
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
+import io.github.meko123456.syncbeats.core.domain.repository.YouTubeAccountGateway
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -59,10 +59,10 @@ private data class HomeSignals(
 )
 
 class HomeViewModel(
-    private val firebase: FirebaseRepository,
+    private val firebase: RoomRepository,
     private val youtube: MusicSource,
-    private val authRepo: AuthRepository,
-    private val ytAccount: YouTubeAccountRepository,
+    private val authRepo: AuthGateway,
+    private val ytAccount: YouTubeAccountGateway,
     private val google: GoogleAuthController,
 ) : ViewModel() {
 

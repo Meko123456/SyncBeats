@@ -1,5 +1,11 @@
 package io.github.meko123456.syncbeats.data
 
+import io.github.meko123456.syncbeats.core.domain.repository.YouTubeAccountGateway
+
+import io.github.meko123456.syncbeats.core.domain.music.MusicSource
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.repository.freshAccessTokenSuspend
+import io.github.meko123456.syncbeats.core.model.AccountPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.util.array
 import io.github.meko123456.syncbeats.util.get
@@ -14,13 +20,6 @@ import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
-data class AccountPlaylist(
-    val id: String,
-    val title: String,
-    val thumbnailUrl: String,
-    val trackCount: Int,
-)
-
 /**
  * The signed-in user's own YouTube library via the official Data API v3
  * (youtube.readonly scope). Metadata only — playback still resolves through
@@ -29,10 +28,10 @@ data class AccountPlaylist(
 class YouTubeAccountRepository(
     private val http: HttpClient,
     private val google: GoogleAuthController,
-) {
+) : YouTubeAccountGateway {
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun isConnected(): Boolean = google.freshAccessTokenSuspend() != null
+    override suspend fun isConnected(): Boolean = google.freshAccessTokenSuspend() != null
 
     private suspend fun call(endpoint: String, vararg params: Pair<String, String>): JsonElement {
         val token = google.freshAccessTokenSuspend()
@@ -49,7 +48,7 @@ class YouTubeAccountRepository(
         return json.parseToJsonElement(body)
     }
 
-    suspend fun myPlaylists(): List<AccountPlaylist> {
+    override suspend fun myPlaylists(): List<AccountPlaylist> {
         val root = call(
             "playlists",
             "part" to "snippet,contentDetails",
@@ -66,7 +65,7 @@ class YouTubeAccountRepository(
         }
     }
 
-    suspend fun likedSongs(): List<SearchResult> {
+    override suspend fun likedSongs(): List<SearchResult> {
         val root = call(
             "videos",
             "part" to "snippet,contentDetails",
@@ -84,7 +83,7 @@ class YouTubeAccountRepository(
         }
     }
 
-    suspend fun playlistItems(playlistId: String): List<SearchResult> {
+    override suspend fun playlistItems(playlistId: String): List<SearchResult> {
         val root = call(
             "playlistItems",
             "part" to "snippet,contentDetails",
@@ -106,7 +105,7 @@ class YouTubeAccountRepository(
     }
 
     /** Latest uploads across the first few subscribed channels, newest first. */
-    suspend fun subscriptionFeed(): List<SearchResult> {
+    override suspend fun subscriptionFeed(): List<SearchResult> {
         val subs = call(
             "subscriptions",
             "part" to "snippet",
