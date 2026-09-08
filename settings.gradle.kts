@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -25,3 +26,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "SyncBeats"
 include(":composeApp")
+include(":core:model")
+include(":core:domain")
+include(":core:data")
+include(":core:designsystem")
+include(":feature:auth")
+include(":feature:lobby")
+include(":feature:home")
+include(":feature:room")

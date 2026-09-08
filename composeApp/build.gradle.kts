@@ -28,6 +28,14 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:model"))
+            implementation(project(":core:domain"))
+            implementation(project(":core:data"))
+            implementation(project(":core:designsystem"))
+            implementation(project(":feature:auth"))
+            implementation(project(":feature:lobby"))
+            implementation(project(":feature:home"))
+            implementation(project(":feature:room"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
@@ -76,6 +84,9 @@ kotlin {
             implementation(kotlin("test"))
         }
         androidInstrumentedTest.dependencies {
+            implementation(project(":core:data"))
+            implementation(libs.koin.android)
+            implementation(libs.ktor.client.core)
             implementation(libs.junit)
             implementation(libs.androidx.test.runner)
             implementation(libs.androidx.test.core)

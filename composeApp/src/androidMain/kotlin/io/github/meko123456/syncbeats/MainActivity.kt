@@ -8,7 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import io.github.meko123456.syncbeats.data.AndroidGoogleAuthController
+import io.github.meko123456.syncbeats.core.data.AndroidGoogleAuthController
 import io.github.meko123456.syncbeats.ui.AppRoot
 import org.koin.android.ext.android.inject
 

@@ -1,7 +1,7 @@
 package io.github.meko123456.syncbeats
 
 import androidx.compose.ui.window.ComposeUIViewController
-import io.github.meko123456.syncbeats.data.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
 import io.github.meko123456.syncbeats.di.initKoin
 import io.github.meko123456.syncbeats.ui.AppRoot
 import org.koin.dsl.module
