@@ -61,7 +61,10 @@ jobs:
           # than on sound, so a headless device is the whole story and a much faster one.
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew :core:data:connectedDebugAndroidTest --stacktrace
+          # :core:data has the media3 playback tests; :composeApp has the Koin graph test,
+          # which is the only thing that proves the nine-module DI graph can actually be built
+          # (a missing binding is invisible to the compiler and three ViewModels sit behind sign-in).
+          script: ./gradlew :core:data:connectedDebugAndroidTest :composeApp:connectedDebugAndroidTest --stacktrace
 
       - name: Upload the report when it fails
         if: failure()

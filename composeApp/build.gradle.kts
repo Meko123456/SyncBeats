@@ -84,6 +84,9 @@ kotlin {
             implementation(kotlin("test"))
         }
         androidInstrumentedTest.dependencies {
+            implementation(project(":core:data"))
+            implementation(libs.koin.android)
+            implementation(libs.ktor.client.core)
             implementation(libs.junit)
             implementation(libs.androidx.test.runner)
             implementation(libs.androidx.test.core)
