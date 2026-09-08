@@ -31,7 +31,9 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
             add("commonMainImplementation", libs.findLibrary("koin-core").get())
             add("commonMainImplementation", libs.findLibrary("koin-compose-viewmodel").get())
 
+            add("commonTestImplementation", libs.findLibrary("kotlin-test").get())
             add("commonTestImplementation", libs.findLibrary("kotlinx-coroutines-test").get())
+            add("commonTestImplementation", project(":core:testing"))
         }
     }
 }
