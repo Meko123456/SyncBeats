@@ -92,8 +92,10 @@ jobs:
       - name: Compile the iOS targets
         run: |
           # :core:model and :core:domain have no Firebase dependency, so their tests LINK and RUN
-          # on a simulator — 40 tests actually executed on iOS rather than merely compiled.
-          ./gradlew :core:model:iosSimulatorArm64Test :core:domain:iosSimulatorArm64Test --stacktrace
+          # on a simulator — 50 tests actually executed on iOS rather than merely compiled.
+          ./gradlew :core:model:iosSimulatorArm64Test \
+                    :core:domain:iosSimulatorArm64Test \
+                    :core:designsystem:iosSimulatorArm64Test --stacktrace
           # Everything downstream of the GitLive bindings cannot be *linked* until the Firebase
           # iOS SDK is integrated (issue #13), so those stay compile-only. Compiling still catches
           # the regression that actually happens: commonMain code that only works on the JVM.
