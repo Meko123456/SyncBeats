@@ -58,11 +58,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
+import io.github.meko123456.syncbeats.core.designsystem.PlatformBackHandler
 import io.github.meko123456.syncbeats.core.domain.sync.ListenerStatus
 import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.core.model.currentTimeMillis
-import io.github.meko123456.syncbeats.ui.PlatformBackHandler
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf

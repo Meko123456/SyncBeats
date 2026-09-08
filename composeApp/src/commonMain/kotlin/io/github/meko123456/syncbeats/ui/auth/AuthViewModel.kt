@@ -2,9 +2,9 @@ package io.github.meko123456.syncbeats.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
 import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
-import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.ui
+package io.github.meko123456.syncbeats.core.designsystem
 
 import io.github.meko123456.syncbeats.core.domain.sync.SyncFailure
 import kotlin.test.Test

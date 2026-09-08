@@ -2,8 +2,11 @@ package io.github.meko123456.syncbeats.ui.room
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.domain.music.MusicSource
 import io.github.meko123456.syncbeats.core.domain.playback.PlayerController
+import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
+import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 import io.github.meko123456.syncbeats.core.domain.sync.DriftMath
 import io.github.meko123456.syncbeats.core.domain.sync.ListenerSnapshot
 import io.github.meko123456.syncbeats.core.domain.sync.ListenerStatus
@@ -18,9 +21,6 @@ import io.github.meko123456.syncbeats.core.model.RoomMeta
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.core.model.currentTimeMillis
-import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
-import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
-import io.github.meko123456.syncbeats.ui.ErrorCopy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -2,11 +2,11 @@ package io.github.meko123456.syncbeats.ui.lobby
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.meko123456.syncbeats.core.model.RoomCode
-import io.github.meko123456.syncbeats.core.model.SavedRoom
+import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
-import io.github.meko123456.syncbeats.ui.ErrorCopy
+import io.github.meko123456.syncbeats.core.model.RoomCode
+import io.github.meko123456.syncbeats.core.model.SavedRoom
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

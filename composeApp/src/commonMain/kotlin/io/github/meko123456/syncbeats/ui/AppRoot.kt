@@ -10,10 +10,10 @@ import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
+import io.github.meko123456.syncbeats.core.designsystem.theme.SyncBeatsTheme
 import io.github.meko123456.syncbeats.ui.auth.AuthScreen
 import io.github.meko123456.syncbeats.ui.auth.AuthViewModel
 import io.github.meko123456.syncbeats.ui.room.RoomScreen
-import io.github.meko123456.syncbeats.ui.theme.SyncBeatsTheme
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
 
