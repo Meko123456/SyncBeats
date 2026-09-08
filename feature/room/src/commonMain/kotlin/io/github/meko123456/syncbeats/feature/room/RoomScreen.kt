@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-package io.github.meko123456.syncbeats.ui.room
+package io.github.meko123456.syncbeats.feature.room
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -83,7 +83,7 @@ fun RoomScreen(
     var showLibrary by remember { mutableStateOf(false) }
 
     val leave = {
-        viewModel.leaveRoom()
+        viewModel.onIntent(RoomIntent.LeaveRoom)
         onLeave()
     }
     PlatformBackHandler(enabled = true, onBack = leave)
@@ -101,7 +101,7 @@ fun RoomScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::toggleSaveRoom) {
+                    IconButton(onClick = { viewModel.onIntent(RoomIntent.ToggleSaveRoom) }) {
                         Icon(
                             if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = if (isSaved) "Unsave room" else "Save room",
@@ -135,10 +135,10 @@ fun RoomScreen(
             MembersBar(state)
             NowPlayingCard(
                 state = state,
-                onTogglePlayPause = viewModel::togglePlayPause,
-                onSeek = viewModel::seek,
-                onSkipNext = viewModel::skipNext,
-                onTakeControl = viewModel::takeControl,
+                onTogglePlayPause = { viewModel.onIntent(RoomIntent.TogglePlayPause) },
+                onSeek = { a0 -> viewModel.onIntent(RoomIntent.Seek(a0)) },
+                onSkipNext = { viewModel.onIntent(RoomIntent.SkipNext) },
+                onTakeControl = { viewModel.onIntent(RoomIntent.TakeControl) },
             )
             Text("Queue (${state.queue.size})", style = MaterialTheme.typography.titleMedium)
             LazyColumn(
@@ -148,8 +148,8 @@ fun RoomScreen(
                 items(state.queue, key = { it.key }) { item ->
                     QueueRow(
                         item = item,
-                        onPlay = { viewModel.playFromQueue(item) },
-                        onRemove = { viewModel.removeFromQueue(item) },
+                        onPlay = { viewModel.onIntent(RoomIntent.PlayFromQueue(item)) },
+                        onRemove = { viewModel.onIntent(RoomIntent.RemoveFromQueue(item)) },
                     )
                 }
             }
@@ -157,7 +157,7 @@ fun RoomScreen(
                 // No "Error:" prefix any more — ErrorCopy produces a sentence that says what
                 // happened and what to do, so labelling it adds nothing.
                 Text(err, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = viewModel::clearError) { Text("Dismiss") }
+                TextButton(onClick = { viewModel.onIntent(RoomIntent.ClearError) }) { Text("Dismiss") }
             }
         }
 
@@ -165,14 +165,14 @@ fun RoomScreen(
             SearchSheet(
                 results = state.searchResults,
                 searching = state.searching,
-                onSearch = viewModel::search,
+                onSearch = { a0 -> viewModel.onIntent(RoomIntent.Search(a0)) },
                 onPick = {
-                    viewModel.addToQueueAndMaybePlay(it)
-                    viewModel.clearSearch()
+                    viewModel.onIntent(RoomIntent.AddToQueueAndMaybePlay(it))
+                    viewModel.onIntent(RoomIntent.ClearSearch)
                     showSearch = false
                 },
                 onDismiss = {
-                    viewModel.clearSearch()
+                    viewModel.onIntent(RoomIntent.ClearSearch)
                     showSearch = false
                 },
             )
@@ -180,22 +180,22 @@ fun RoomScreen(
         if (showChat) {
             ChatSheet(
                 state = state,
-                onSend = viewModel::sendChat,
+                onSend = { a0 -> viewModel.onIntent(RoomIntent.SendChat(a0)) },
                 onDismiss = { showChat = false },
             )
         }
         if (showLibrary) {
             LibrarySheet(
                 library = library,
-                onOpenPlaylist = viewModel::openLibraryPlaylist,
-                onClosePlaylist = viewModel::closeLibraryPlaylist,
+                onOpenPlaylist = { a0 -> viewModel.onIntent(RoomIntent.OpenLibraryPlaylist(a0)) },
+                onClosePlaylist = { viewModel.onIntent(RoomIntent.CloseLibraryPlaylist) },
                 onQueueTrack = {
-                    viewModel.addToQueueAndMaybePlay(it)
+                    viewModel.onIntent(RoomIntent.AddToQueueAndMaybePlay(it))
                 },
-                onQueueHistory = viewModel::queueHistoryItem,
-                onQueueAll = viewModel::queuePlaylist,
+                onQueueHistory = { a0 -> viewModel.onIntent(RoomIntent.QueueHistoryItem(a0)) },
+                onQueueAll = { a0 -> viewModel.onIntent(RoomIntent.QueuePlaylist(a0)) },
                 onDismiss = {
-                    viewModel.closeLibraryPlaylist()
+                    viewModel.onIntent(RoomIntent.CloseLibraryPlaylist)
                     showLibrary = false
                 },
             )

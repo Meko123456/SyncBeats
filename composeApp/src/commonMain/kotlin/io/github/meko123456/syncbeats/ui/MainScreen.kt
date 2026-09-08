@@ -17,7 +17,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import io.github.meko123456.syncbeats.ui.home.HomeScreen
+import io.github.meko123456.syncbeats.feature.home.HomeScreen
 import io.github.meko123456.syncbeats.feature.lobby.LobbyScreen
 
 @Composable

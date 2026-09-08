@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.ui.room
+package io.github.meko123456.syncbeats.feature.room
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -89,6 +89,29 @@ class RoomViewModel(
     private val playerController: PlayerController,
     private val appScope: CoroutineScope,
 ) : ViewModel() {
+
+    /** The single entry point for everything the room screen can ask for. */
+    fun onIntent(intent: RoomIntent) {
+        when (intent) {
+            RoomIntent.LeaveRoom -> leaveRoom()
+            RoomIntent.ToggleSaveRoom -> toggleSaveRoom()
+            is RoomIntent.Search -> search(intent.query)
+            RoomIntent.ClearSearch -> clearSearch()
+            is RoomIntent.AddToQueueAndMaybePlay -> addToQueueAndMaybePlay(intent.result)
+            is RoomIntent.PlayFromQueue -> playFromQueue(intent.item)
+            is RoomIntent.RemoveFromQueue -> removeFromQueue(intent.item)
+            RoomIntent.TogglePlayPause -> togglePlayPause()
+            is RoomIntent.Seek -> seek(intent.positionMs)
+            RoomIntent.SkipNext -> skipNext()
+            RoomIntent.TakeControl -> takeControl()
+            is RoomIntent.OpenLibraryPlaylist -> openLibraryPlaylist(intent.playlist)
+            RoomIntent.CloseLibraryPlaylist -> closeLibraryPlaylist()
+            is RoomIntent.QueueHistoryItem -> queueHistoryItem(intent.item)
+            is RoomIntent.QueuePlaylist -> queuePlaylist(intent.details)
+            is RoomIntent.SendChat -> sendChat(intent.text)
+            RoomIntent.ClearError -> clearError()
+        }
+    }
 
     private val _search = MutableStateFlow<List<SearchResult>>(emptyList())
     private val _searching = MutableStateFlow(false)
@@ -274,7 +297,7 @@ class RoomViewModel(
     }
 
     /** Stops synced playback on this device and drops room presence. */
-    fun leaveRoom() {
+    private fun leaveRoom() {
         hasLeft = true
         val uid = authRepo.currentUser()?.uid
         syncEngine.stop()
@@ -284,7 +307,7 @@ class RoomViewModel(
         }
     }
 
-    fun toggleSaveRoom() {
+    private fun toggleSaveRoom() {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
             runCatching {
@@ -298,7 +321,7 @@ class RoomViewModel(
         }
     }
 
-    fun search(query: String) {
+    private fun search(query: String) {
         viewModelScope.launch {
             _searching.value = true
             runCatching { youtube.search(query) }
@@ -308,11 +331,11 @@ class RoomViewModel(
         }
     }
 
-    fun clearSearch() {
+    private fun clearSearch() {
         _search.value = emptyList()
     }
 
-    fun addToQueueAndMaybePlay(result: SearchResult) {
+    private fun addToQueueAndMaybePlay(result: SearchResult) {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
             val item = result.toQueueItem()
@@ -328,7 +351,7 @@ class RoomViewModel(
         }
     }
 
-    fun playFromQueue(item: QueueItem) {
+    private fun playFromQueue(item: QueueItem) {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
             if (!state.value.isHost) firebase.takeControl(roomId, uid)
@@ -337,21 +360,21 @@ class RoomViewModel(
         }
     }
 
-    fun removeFromQueue(item: QueueItem) {
+    private fun removeFromQueue(item: QueueItem) {
         viewModelScope.launch {
             firebase.removeFromQueue(roomId, item.key)
         }
     }
 
-    fun togglePlayPause() {
+    private fun togglePlayPause() {
         viewModelScope.launch { syncEngine.hostTogglePlayPause() }
     }
 
-    fun seek(positionMs: Long) {
+    private fun seek(positionMs: Long) {
         viewModelScope.launch { syncEngine.hostSeek(positionMs) }
     }
 
-    fun skipNext() {
+    private fun skipNext() {
         viewModelScope.launch {
             val next = state.value.queue.firstOrNull() ?: run {
                 syncEngine.hostStop()
@@ -364,7 +387,7 @@ class RoomViewModel(
         }
     }
 
-    fun takeControl() {
+    private fun takeControl() {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
             firebase.takeControl(roomId, uid)
@@ -373,7 +396,7 @@ class RoomViewModel(
 
     // ───────── In-room library ─────────
 
-    fun openLibraryPlaylist(playlist: SavedPlaylist) {
+    private fun openLibraryPlaylist(playlist: SavedPlaylist) {
         viewModelScope.launch {
             _libraryLoading.value = true
             runCatching { youtube.playlist(playlist.url) }
@@ -383,11 +406,11 @@ class RoomViewModel(
         }
     }
 
-    fun closeLibraryPlaylist() {
+    private fun closeLibraryPlaylist() {
         _libraryOpened.value = null
     }
 
-    fun queueHistoryItem(item: HistoryItem) {
+    private fun queueHistoryItem(item: HistoryItem) {
         addToQueueAndMaybePlay(
             SearchResult(
                 videoId = item.videoId,
@@ -400,7 +423,7 @@ class RoomViewModel(
     }
 
     /** Queues a whole playlist; starts the first track if the room is idle. */
-    fun queuePlaylist(details: PlaylistDetails) {
+    private fun queuePlaylist(details: PlaylistDetails) {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
             val tracks = details.tracks.take(50)
@@ -429,7 +452,7 @@ class RoomViewModel(
         durationMs = durationMs,
     )
 
-    fun sendChat(text: String) {
+    private fun sendChat(text: String) {
         if (text.isBlank()) return
         viewModelScope.launch {
             val user = authRepo.currentUser() ?: return@launch
@@ -447,7 +470,7 @@ class RoomViewModel(
         const val STATUS_TICK_MS = 1_000L
     }
 
-    fun clearError() {
+    private fun clearError() {
         _error.update { null }
     }
 }

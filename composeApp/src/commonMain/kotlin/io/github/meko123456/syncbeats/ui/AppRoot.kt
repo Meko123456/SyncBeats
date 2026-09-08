@@ -14,7 +14,7 @@ import io.github.meko123456.syncbeats.core.designsystem.theme.SyncBeatsTheme
 import io.github.meko123456.syncbeats.feature.auth.AuthIntent
 import io.github.meko123456.syncbeats.feature.auth.AuthScreen
 import io.github.meko123456.syncbeats.feature.auth.AuthViewModel
-import io.github.meko123456.syncbeats.ui.room.RoomScreen
+import io.github.meko123456.syncbeats.feature.room.RoomScreen
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
 

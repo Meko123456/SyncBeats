@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.ui.home
+package io.github.meko123456.syncbeats.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,29 +22,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class YtRails(
-    /** Null until the connection check finishes. */
-    val connected: Boolean? = null,
-    val loading: Boolean = false,
-    val playlists: List<AccountPlaylist> = emptyList(),
-    val likedSongs: List<SearchResult> = emptyList(),
-    val subscriptionFeed: List<SearchResult> = emptyList(),
-)
-
-data class HomeUiState(
-    val history: List<HistoryItem> = emptyList(),
-    val playlists: List<SavedPlaylist> = emptyList(),
-    val trending: List<SearchResult> = emptyList(),
-    val loadingTrending: Boolean = false,
-    val importing: Boolean = false,
-    val openedPlaylist: PlaylistDetails? = null,
-    val loadingPlaylist: Boolean = false,
-    val yt: YtRails = YtRails(),
-    /** Room code to navigate to (with autoplay); UI consumes it. */
-    val enterRoomId: String? = null,
-    val error: String? = null,
-)
-
 private data class HomeExtras(
     val trending: List<SearchResult>,
     val loadingTrending: Boolean,
@@ -65,6 +42,24 @@ class HomeViewModel(
     private val ytAccount: YouTubeAccountGateway,
     private val google: GoogleAuthController,
 ) : ViewModel() {
+
+    /** The single entry point for everything the home screen can ask for. */
+    fun onIntent(intent: HomeIntent) {
+        when (intent) {
+            HomeIntent.RefreshTrending -> refreshTrending()
+            HomeIntent.ConnectYouTube -> connectYouTube()
+            is HomeIntent.OpenAccountPlaylist -> openAccountPlaylist(intent.playlist)
+            is HomeIntent.ImportPlaylist -> importPlaylist(intent.url)
+            is HomeIntent.RemovePlaylist -> removePlaylist(intent.playlist)
+            is HomeIntent.OpenPlaylist -> openPlaylist(intent.playlist)
+            HomeIntent.ClosePlaylist -> closePlaylist()
+            is HomeIntent.PlayTrackInNewRoom -> playTrackInNewRoom(intent.track)
+            is HomeIntent.PlayHistoryInNewRoom -> playHistoryInNewRoom(intent.item)
+            is HomeIntent.PlayPlaylistInNewRoom -> playPlaylistInNewRoom(intent.details)
+            HomeIntent.ConsumeEnterRoom -> consumeEnterRoom()
+            HomeIntent.ClearError -> clearError()
+        }
+    }
 
     private val uid: String get() = authRepo.currentUser()?.uid.orEmpty()
 
@@ -87,14 +82,14 @@ class HomeViewModel(
         HomeSignals(enter, error)
     }
 
-    val state: StateFlow<HomeUiState> = combine(
+    val state: StateFlow<HomeState> = combine(
         firebase.observeHistory(uid),
         firebase.observePlaylists(uid),
         extrasFlow,
         signalsFlow,
         _yt,
     ) { history, playlists, extras, signals, yt ->
-        HomeUiState(
+        HomeState(
             history = history.distinctBy { it.videoId },
             playlists = playlists,
             trending = extras.trending,
@@ -106,14 +101,14 @@ class HomeViewModel(
             enterRoomId = signals.enterRoomId,
             error = signals.error,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
 
     init {
         refreshTrending()
         loadYouTubeRails()
     }
 
-    fun refreshTrending() {
+    private fun refreshTrending() {
         if (_loadingTrending.value) return
         viewModelScope.launch {
             _loadingTrending.value = true
@@ -148,7 +143,7 @@ class HomeViewModel(
     }
 
     /** Grants the YouTube scope (also signs into Google if needed), then loads rails. */
-    fun connectYouTube() {
+    private fun connectYouTube() {
         viewModelScope.launch {
             runCatching { google.signInSuspend() }
                 .onSuccess { loadYouTubeRails() }
@@ -156,7 +151,7 @@ class HomeViewModel(
         }
     }
 
-    fun openAccountPlaylist(playlist: AccountPlaylist) {
+    private fun openAccountPlaylist(playlist: AccountPlaylist) {
         viewModelScope.launch {
             _loadingPlaylist.value = true
             runCatching { ytAccount.playlistItems(playlist.id) }
@@ -179,7 +174,7 @@ class HomeViewModel(
 
     // ───────── Link-imported playlists ─────────
 
-    fun importPlaylist(url: String) {
+    private fun importPlaylist(url: String) {
         if (url.isBlank() || _importing.value) return
         viewModelScope.launch {
             _importing.value = true
@@ -191,14 +186,14 @@ class HomeViewModel(
         }
     }
 
-    fun removePlaylist(playlist: SavedPlaylist) {
+    private fun removePlaylist(playlist: SavedPlaylist) {
         viewModelScope.launch {
             runCatching { firebase.removePlaylist(uid, playlist.key) }
                 .onFailure { _error.value = it.message }
         }
     }
 
-    fun openPlaylist(playlist: SavedPlaylist) {
+    private fun openPlaylist(playlist: SavedPlaylist) {
         viewModelScope.launch {
             _loadingPlaylist.value = true
             runCatching { youtube.playlist(playlist.url) }
@@ -208,17 +203,17 @@ class HomeViewModel(
         }
     }
 
-    fun closePlaylist() {
+    private fun closePlaylist() {
         _openedPlaylist.value = null
     }
 
     // ───────── Play in a fresh room ─────────
 
-    fun playTrackInNewRoom(track: SearchResult) {
+    private fun playTrackInNewRoom(track: SearchResult) {
         startRoomWith(listOf(track.toQueueItem()), roomName = track.title)
     }
 
-    fun playHistoryInNewRoom(item: HistoryItem) {
+    private fun playHistoryInNewRoom(item: HistoryItem) {
         val queueItem = QueueItem(
             videoId = item.videoId,
             title = item.title,
@@ -229,7 +224,7 @@ class HomeViewModel(
         startRoomWith(listOf(queueItem), roomName = item.title)
     }
 
-    fun playPlaylistInNewRoom(details: PlaylistDetails) {
+    private fun playPlaylistInNewRoom(details: PlaylistDetails) {
         startRoomWith(
             details.tracks.take(MAX_PLAYLIST_QUEUE).map { it.toQueueItem() },
             roomName = details.title,
@@ -250,11 +245,11 @@ class HomeViewModel(
         }
     }
 
-    fun consumeEnterRoom() {
+    private fun consumeEnterRoom() {
         _enterRoomId.value = null
     }
 
-    fun clearError() {
+    private fun clearError() {
         _error.update { null }
     }
 

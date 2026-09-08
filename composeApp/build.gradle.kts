@@ -34,6 +34,8 @@ kotlin {
             implementation(project(":core:designsystem"))
             implementation(project(":feature:auth"))
             implementation(project(":feature:lobby"))
+            implementation(project(":feature:home"))
+            implementation(project(":feature:room"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)

@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-package io.github.meko123456.syncbeats.ui.home
+package io.github.meko123456.syncbeats.feature.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -67,7 +67,7 @@ fun HomeScreen(
 
     LaunchedEffect(state.enterRoomId) {
         state.enterRoomId?.let { roomId ->
-            viewModel.consumeEnterRoom()
+            viewModel.onIntent(HomeIntent.ConsumeEnterRoom)
             onEnterRoom(roomId, true)
         }
     }
@@ -89,7 +89,7 @@ fun HomeScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                     ) {
                         items(state.history, key = { it.key }) { item ->
-                            HistoryCard(item) { viewModel.playHistoryInNewRoom(item) }
+                            HistoryCard(item) { viewModel.onIntent(HomeIntent.PlayHistoryInNewRoom(item)) }
                         }
                     }
                 }
@@ -125,7 +125,7 @@ fun HomeScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                     ) {
                         items(state.playlists, key = { it.key }) { playlist ->
-                            PlaylistCard(playlist) { viewModel.openPlaylist(playlist) }
+                            PlaylistCard(playlist) { viewModel.onIntent(HomeIntent.OpenPlaylist(playlist)) }
                         }
                     }
                 }
@@ -146,7 +146,7 @@ fun HomeScreen(
                                 "Connect your Google account to see your playlists, liked songs and subscriptions here.",
                                 style = MaterialTheme.typography.bodySmall,
                             )
-                            Button(onClick = viewModel::connectYouTube) { Text("Connect YouTube") }
+                            Button(onClick = { viewModel.onIntent(HomeIntent.ConnectYouTube) }) { Text("Connect YouTube") }
                         }
                     }
                 }
@@ -166,7 +166,7 @@ fun HomeScreen(
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                             ) {
                                 items(state.yt.playlists, key = { it.id }) { playlist ->
-                                    AccountPlaylistCard(playlist) { viewModel.openAccountPlaylist(playlist) }
+                                    AccountPlaylistCard(playlist) { viewModel.onIntent(HomeIntent.OpenAccountPlaylist(playlist)) }
                                 }
                             }
                         }
@@ -179,7 +179,7 @@ fun HomeScreen(
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                             ) {
                                 items(state.yt.likedSongs, key = { it.videoId }) { track ->
-                                    TrackCard(track) { viewModel.playTrackInNewRoom(track) }
+                                    TrackCard(track) { viewModel.onIntent(HomeIntent.PlayTrackInNewRoom(track)) }
                                 }
                             }
                         }
@@ -187,7 +187,7 @@ fun HomeScreen(
                     if (state.yt.subscriptionFeed.isNotEmpty()) {
                         item { SectionHeader("New from subscriptions") }
                         items(state.yt.subscriptionFeed, key = { "sub-" + it.videoId }) { track ->
-                            TrendingRow(track) { viewModel.playTrackInNewRoom(track) }
+                            TrendingRow(track) { viewModel.onIntent(HomeIntent.PlayTrackInNewRoom(track)) }
                         }
                     }
                 }
@@ -204,7 +204,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f),
                     )
-                    IconButton(onClick = viewModel::refreshTrending) {
+                    IconButton(onClick = { viewModel.onIntent(HomeIntent.RefreshTrending) }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
                 }
@@ -217,14 +217,14 @@ fun HomeScreen(
                 }
             }
             items(state.trending, key = { it.videoId }) { track ->
-                TrendingRow(track) { viewModel.playTrackInNewRoom(track) }
+                TrendingRow(track) { viewModel.onIntent(HomeIntent.PlayTrackInNewRoom(track)) }
             }
 
             state.error?.let { err ->
                 item {
                     Column(Modifier.padding(horizontal = 16.dp)) {
                         Text("Error: $err", color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = viewModel::clearError) { Text("Dismiss") }
+                        TextButton(onClick = { viewModel.onIntent(HomeIntent.ClearError) }) { Text("Dismiss") }
                     }
                 }
             }
@@ -235,14 +235,14 @@ fun HomeScreen(
     if (showImportDialog) {
         ImportPlaylistDialog(
             importing = state.importing,
-            onImport = viewModel::importPlaylist,
+            onImport = { url -> viewModel.onIntent(HomeIntent.ImportPlaylist(url)) },
             onDismiss = { showImportDialog = false },
         )
     }
 
     state.openedPlaylist?.let { details ->
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(onDismissRequest = viewModel::closePlaylist, sheetState = sheetState) {
+        ModalBottomSheet(onDismissRequest = { viewModel.onIntent(HomeIntent.ClosePlaylist) }, sheetState = sheetState) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(details.title, style = MaterialTheme.typography.titleLarge)
                 Text(
@@ -250,7 +250,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Button(
-                    onClick = { viewModel.playPlaylistInNewRoom(details) },
+                    onClick = { viewModel.onIntent(HomeIntent.PlayPlaylistInNewRoom(details)) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -270,7 +270,7 @@ fun HomeScreen(
                             headlineContent = { Text(track.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             supportingContent = { Text(track.artist, maxLines = 1) },
                             trailingContent = {
-                                TextButton(onClick = { viewModel.playTrackInNewRoom(track) }) {
+                                TextButton(onClick = { viewModel.onIntent(HomeIntent.PlayTrackInNewRoom(track)) }) {
                                     Text("Play")
                                 }
                             },
