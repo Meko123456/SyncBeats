@@ -26,7 +26,7 @@ jobs:
       # composeApp/build.gradle.kts only applies the Google Services plugin when the file exists.
       # This job therefore also proves a fresh clone still builds, which is what a reviewer does.
       - name: Test, build and lint
-        run: ./gradlew :composeApp:testDebugUnitTest :composeApp:assembleDebug :composeApp:lintDebug --stacktrace
+        run: ./gradlew testDebugUnitTest :composeApp:assembleDebug :composeApp:lintDebug --stacktrace
 
   instrumented:
     # The playback tests need a real Android runtime: they bind the MediaSession service and decode
@@ -61,7 +61,7 @@ jobs:
           # than on sound, so a headless device is the whole story and a much faster one.
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew :composeApp:connectedDebugAndroidTest --stacktrace
+          script: ./gradlew :core:data:connectedDebugAndroidTest --stacktrace
 
       - name: Upload the report when it fails
         if: failure()
@@ -87,7 +87,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Compile the iOS targets
-        run: ./gradlew :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compileKotlinIosArm64 :composeApp:compileTestKotlinIosSimulatorArm64 --stacktrace
+        run: |
+          # :core:model and :core:domain have no Firebase dependency, so their tests LINK and RUN
+          # on a simulator — 40 tests actually executed on iOS rather than merely compiled.
+          ./gradlew :core:model:iosSimulatorArm64Test :core:domain:iosSimulatorArm64Test --stacktrace
+          # Everything downstream of the GitLive bindings cannot be *linked* until the Firebase
+          # iOS SDK is integrated (issue #13), so those stay compile-only. Compiling still catches
+          # the regression that actually happens: commonMain code that only works on the JVM.
+          ./gradlew :core:data:compileKotlinIosSimulatorArm64 \
+                    :composeApp:compileKotlinIosSimulatorArm64 \
+                    :composeApp:compileKotlinIosArm64 \
+                    :composeApp:compileTestKotlinIosSimulatorArm64 --stacktrace
 
   rules:
     # The security rules are the only thing between a room and anyone with an account, so they get
