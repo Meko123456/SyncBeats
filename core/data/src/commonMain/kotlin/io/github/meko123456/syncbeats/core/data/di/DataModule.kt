@@ -3,6 +3,7 @@ package io.github.meko123456.syncbeats.core.data.di
 import io.github.meko123456.syncbeats.core.data.AuthRepository
 import io.github.meko123456.syncbeats.core.data.FirebaseRepository
 import io.github.meko123456.syncbeats.core.data.YouTubeAccountRepository
+import io.github.meko123456.syncbeats.core.domain.di.APP_SCOPE
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 import io.github.meko123456.syncbeats.core.domain.repository.YouTubeAccountGateway
@@ -12,13 +13,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /** Provides PlayerController, MusicSource and (on Android) GoogleAuthController. */
 expect val platformModule: Module
-
-val APP_SCOPE = named("appScope")
 
 /**
  * Everything platform-agnostic in the data layer: the HTTP client, the three port

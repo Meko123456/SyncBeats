@@ -11,6 +11,8 @@ kotlin {
         commonMain.dependencies {
             api(project(":core:model"))
             implementation(libs.kotlinx.coroutines.core)
+            // For the Koin qualifiers both the features and the data layer name.
+            api(libs.koin.core)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

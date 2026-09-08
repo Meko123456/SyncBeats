@@ -32,6 +32,8 @@ kotlin {
             implementation(project(":core:domain"))
             implementation(project(":core:data"))
             implementation(project(":core:designsystem"))
+            implementation(project(":feature:auth"))
+            implementation(project(":feature:lobby"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)

@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-package io.github.meko123456.syncbeats.ui.lobby
+package io.github.meko123456.syncbeats.feature.lobby
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,7 +46,7 @@ fun LobbyScreen(
 
     LaunchedEffect(state.enterRoomId) {
         state.enterRoomId?.let { roomId ->
-            viewModel.consumeEnterRoom()
+            viewModel.onIntent(LobbyIntent.ConsumeEnterRoom)
             onEnterRoom(roomId)
         }
     }
@@ -90,10 +90,10 @@ fun LobbyScreen(
                                     )
                                 }
                                 TextButton(
-                                    onClick = { viewModel.openSavedRoom(room) },
+                                    onClick = { viewModel.onIntent(LobbyIntent.OpenSavedRoom(room)) },
                                     enabled = !state.loading,
                                 ) { Text("Open") }
-                                TextButton(onClick = { viewModel.removeSavedRoom(room) }) {
+                                TextButton(onClick = { viewModel.onIntent(LobbyIntent.RemoveSavedRoom(room)) }) {
                                     Text("Remove")
                                 }
                             }
@@ -117,7 +117,7 @@ fun LobbyScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Button(
-                        onClick = { viewModel.createRoom(roomName) },
+                        onClick = { viewModel.onIntent(LobbyIntent.CreateRoom(roomName)) },
                         enabled = !state.loading,
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Create room") }
@@ -145,7 +145,7 @@ fun LobbyScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     OutlinedButton(
-                        onClick = { viewModel.joinRoom(code) },
+                        onClick = { viewModel.onIntent(LobbyIntent.JoinRoom(code)) },
                         enabled = !state.loading && RoomCode.isValid(code),
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Join") }
@@ -158,7 +158,7 @@ fun LobbyScreen(
             }
             state.error?.let {
                 Text("Error: $it", color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = viewModel::clearError) { Text("Dismiss") }
+                TextButton(onClick = { viewModel.onIntent(LobbyIntent.ClearError) }) { Text("Dismiss") }
             }
         }
     }

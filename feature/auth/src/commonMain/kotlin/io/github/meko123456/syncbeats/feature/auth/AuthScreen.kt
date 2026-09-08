@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-package io.github.meko123456.syncbeats.ui.auth
+package io.github.meko123456.syncbeats.feature.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AuthScreen(
-    state: AuthUiState,
+    state: AuthState,
     onSignIn: (email: String, password: String) -> Unit,
     onSignUp: (email: String, password: String, username: String) -> Unit,
     onGoogleSignIn: () -> Unit,

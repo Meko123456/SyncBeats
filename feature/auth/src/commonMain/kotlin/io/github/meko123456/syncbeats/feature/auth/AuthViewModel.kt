@@ -1,4 +1,4 @@
-package io.github.meko123456.syncbeats.ui.auth
+package io.github.meko123456.syncbeats.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,21 +11,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AuthUiState(
-    val signedIn: Boolean = false,
-    val loading: Boolean = false,
-    val error: String? = null,
-    val username: String = "",
-    val uid: String = "",
-)
-
 class AuthViewModel(
     private val authRepo: AuthGateway,
     private val google: GoogleAuthController,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AuthUiState())
-    val state: StateFlow<AuthUiState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(AuthState())
+    val state: StateFlow<AuthState> = _state.asStateFlow()
+
+    /** The single entry point for everything the screen can ask for. */
+    fun onIntent(intent: AuthIntent) {
+        when (intent) {
+            is AuthIntent.SignIn -> signIn(intent.email, intent.password)
+            is AuthIntent.SignUp -> signUp(intent.email, intent.password, intent.username)
+            AuthIntent.SignInWithGoogle -> signInWithGoogle()
+            AuthIntent.SignOut -> signOut()
+        }
+    }
 
     init {
         val user = authRepo.currentUser()
@@ -40,7 +42,7 @@ class AuthViewModel(
         }
     }
 
-    fun signIn(email: String, password: String) {
+    private fun signIn(email: String, password: String) {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             runCatching { authRepo.signIn(email, password) }
@@ -62,7 +64,7 @@ class AuthViewModel(
         }
     }
 
-    fun signUp(email: String, password: String, username: String) {
+    private fun signUp(email: String, password: String, username: String) {
         val name = username.trim()
         if (name.isEmpty()) {
             _state.update { it.copy(error = "Pick a username first") }
@@ -91,7 +93,7 @@ class AuthViewModel(
         }
     }
 
-    fun signInWithGoogle() {
+    private fun signInWithGoogle() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             runCatching {
@@ -116,11 +118,11 @@ class AuthViewModel(
         }
     }
 
-    fun signOut() {
+    private fun signOut() {
         viewModelScope.launch {
             runCatching { google.signOut() }
             runCatching { authRepo.signOut() }
-            _state.update { AuthUiState() }
+            _state.update { AuthState() }
         }
     }
 }
