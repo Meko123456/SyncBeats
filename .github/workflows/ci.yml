@@ -43,6 +43,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      # The ubuntu-latest image leaves ~7 GB free and the emulator wants 7.2 GB for its userdata
+      # partition alone — Owlarm's identical job died on exactly this; ours passed with almost no
+      # margin. Dropping preinstalled toolchains nobody here uses frees ~15 GB (the JDK lives in
+      # the hostedtoolcache, so it stays).
+      - name: Free disk space for the emulator
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/share/swift /usr/local/.ghcup \
+                      /usr/local/lib/android/sdk/ndk /opt/hostedtoolcache/CodeQL
+          df -h / | tail -1
+
       # The emulator will not start without nested virtualisation available to the runner.
       - name: Enable KVM
         run: |
