@@ -1,7 +1,7 @@
 [versions]
 agp = "9.1.1"
 kotlin = "2.4.10"
-composeMultiplatform = "1.11.0"
+composeMultiplatform = "1.12.0"
 material3 = "1.11.0-alpha07"
 composeMaterialIcons = "1.7.3"
 androidx-activity = "1.13.0"
