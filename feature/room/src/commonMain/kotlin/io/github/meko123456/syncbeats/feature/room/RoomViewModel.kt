@@ -90,6 +90,19 @@ class RoomViewModel(
     private val appScope: CoroutineScope,
 ) : ViewModel() {
 
+    /**
+     * Stop the shared sync engine when this screen's ViewModel goes away.
+     *
+     * Both exits already call leaveRoom() — the Leave button and the system back handler — so this
+     * is a safety net rather than a fix for an observed leak. It matters because SyncEngine is a
+     * singleton that outlives the screen: anything that clears the ViewModel without going through
+     * those two paths would leave its drift loop seeking the player against a room nobody is in.
+     */
+    override fun onCleared() {
+        syncEngine.stop()
+        super.onCleared()
+    }
+
     /** The single entry point for everything the room screen can ask for. */
     fun onIntent(intent: RoomIntent) {
         when (intent) {
