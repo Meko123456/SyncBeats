@@ -10,6 +10,7 @@ import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.RoomMeta
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SavedRoom
+import io.github.meko123456.syncbeats.core.model.currentTimeMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -88,14 +89,21 @@ class FakeRoomRepository : RoomRepository {
         guard(); meta.value = meta.value?.copy(hostId = userId)
     }
 
-    override suspend fun setPlayback(roomId: String, state: PlaybackState) { guard(); playback.value = state }
+    // The real repository stamps every playback write with ServerValue.TIMESTAMP. The engine
+    // computes elapsed time from that stamp, so a fake that left it at zero would make every
+    // playing state look like it started in 1970 and had long since ended.
+    override suspend fun setPlayback(roomId: String, state: PlaybackState) {
+        guard(); playback.value = state.copy(updatedAt = currentTimeMillis())
+    }
 
     override suspend fun updatePlayingFlag(roomId: String, isPlaying: Boolean, positionMs: Long) {
-        guard(); playback.value = playback.value?.copy(isPlaying = isPlaying, positionMs = positionMs)
+        guard()
+        playback.value = playback.value?.copy(isPlaying = isPlaying, positionMs = positionMs, updatedAt = currentTimeMillis())
     }
 
     override suspend fun seek(roomId: String, positionMs: Long, isPlaying: Boolean) {
-        guard(); playback.value = playback.value?.copy(positionMs = positionMs, isPlaying = isPlaying)
+        guard()
+        playback.value = playback.value?.copy(positionMs = positionMs, isPlaying = isPlaying, updatedAt = currentTimeMillis())
     }
 
     override suspend fun addToQueue(roomId: String, item: QueueItem, addedBy: String) {

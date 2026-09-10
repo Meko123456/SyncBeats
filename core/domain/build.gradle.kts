@@ -17,6 +17,10 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+            // The in-memory fakes of this module's own ports. :core:testing depends on :core:domain's
+            // main sources and this is a test dependency, so the graph has no cycle - the same shape
+            // Now in Android uses.
+            implementation(project(":core:testing"))
         }
     }
 }
