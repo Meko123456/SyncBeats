@@ -8,20 +8,57 @@ the same music at the same time.
 
 ## Project layout
 
-- `composeApp/` — Kotlin Multiplatform module
-  - `commonMain` — all UI (Compose), sync engine, Firebase (GitLive SDK), Koin DI
-  - `androidMain` — Media3/ExoPlayer player, NewPipe Extractor music source
-  - `iosMain` — AVPlayer player, InnerTube music source
-- `iosApp/` — Xcode project (regenerate with `xcodegen generate` after editing
-  `project.yml`); links the ComposeApp framework and the Firebase iOS SDK (SPM).
+Ten Gradle modules on Now-in-Android-style convention plugins. Every module is Kotlin
+Multiplatform (Android, `iosArm64`, `iosSimulatorArm64`) so nothing can quietly exclude iOS.
 
-**Android:** `./gradlew :composeApp:installDebug`
-**iOS:** open `iosApp/iosApp.xcodeproj` in Xcode and run, or
+- `build-logic/` — the convention plugins. `syncbeats.kmp.library` sets the targets, SDK
+  levels and JVM 17 once; `syncbeats.kmp.library.compose` adds the Compose runtime; and
+  `syncbeats.kmp.feature` makes a screen module out of a one-line build file (domain +
+  design system + Material 3, lifecycle, Koin, and `:core:testing` for its tests).
+- `core/model` — plain data: `AuthUser`, rooms and members, `PlaybackState`, `RoomCode`,
+  and the drift constants.
+- `core/domain` — the ports every screen talks to (`AuthGateway`, `RoomRepository`,
+  `MusicSource`, `PlayerController`, …) and the sync engine (`SyncEngine`, `DriftMath`,
+  `ListenerStatus`). No Firebase, no Ktor, no platform code — which is why its tests run on
+  an iOS simulator in CI, not just the JVM.
+- `core/data` — the adapters behind those ports: Firebase Auth and Realtime Database through
+  the GitLive SDK, NewPipe Extractor (Android) and a small InnerTube client (iOS) as music
+  sources, the Media3 `PlaybackService` (Android) and an AVPlayer controller (iOS), plus the
+  Koin data module that binds them.
+- `core/designsystem` — theme, shared error copy, the platform back handler.
+- `core/testing` — in-memory fakes of the ports, so a ViewModel test needs neither Firebase
+  nor a device.
+- `feature/auth`, `feature/lobby`, `feature/home`, `feature/room` — one MVI module per
+  screen: a `Contract` (single state + sealed intents), a `ViewModel`, a `Screen`, and a Koin
+  module. A feature depends on `:core:domain` and never on `:core:data`, so a screen cannot
+  reach Firebase or a player even by accident.
+- `composeApp/` — the app shell: `SyncBeatsApp` assembles the Koin graph, `AppRoot` hosts
+  navigation, and `MainActivity` / `MainViewController` are the two entry points. Also
+  builds the iOS framework.
+- `iosApp/` — Xcode project (regenerate with `xcodegen generate` after editing `project.yml`).
+  The iOS targets compile in CI but cannot link yet — see #13.
+- `tools/rules-tests/` — the Realtime Database security rules, run against the Firebase
+  emulator on every push.
+
+## Building and testing
+
+```sh
+./gradlew :composeApp:installDebug                 # Android, to a connected device or emulator
+./gradlew testDebugUnitTest                        # every module's JVM tests
+./gradlew :core:domain:iosSimulatorArm64Test       # the same domain tests, on an iOS simulator
+./gradlew :core:data:connectedDebugAndroidTest \
+          :composeApp:connectedDebugAndroidTest    # playback + Koin-graph tests, needs a device
+(cd tools/rules-tests && npm ci && npm test)       # the database rules, on the Firebase emulator
+```
+
+iOS: open `iosApp/iosApp.xcodeproj` in Xcode and run, or
 `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build`
+(blocked on #13 until the Firebase iOS SDK is integrated).
 
 Firebase config lives at `composeApp/google-services.json` (Android) and
-`iosApp/iosApp/GoogleService-Info.plist` (iOS) — both from the same Firebase
-project.
+`iosApp/iosApp/GoogleService-Info.plist` (iOS) — both from the same Firebase project, both
+git-ignored. [SETUP.md](SETUP.md) walks through creating them.
+
 Users sign up, create a listening room (or join one with a 6-character code), search
 YouTube for tracks, and everyone in the room hears the same track at the same position.
 
