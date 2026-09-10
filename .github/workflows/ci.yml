@@ -28,6 +28,12 @@ jobs:
       - name: Test, build and lint
         run: ./gradlew testDebugUnitTest :composeApp:assembleDebug :composeApp:lintDebug --stacktrace
 
+      # Guards the R8/shrinker config and release-only lint: assembleRelease runs R8 (debug never
+      # does), and lintVitalRelease can fail where lintDebug is green. The APK is unsigned - there is
+      # no release keystore here - which is fine: the point is that the shrunk app builds at all.
+      - name: Release build (R8) + release lint
+        run: ./gradlew :composeApp:assembleRelease :composeApp:lintVitalRelease --stacktrace
+
   instrumented:
     # The playback tests need a real Android runtime: they bind the MediaSession service and decode
     # audio, which no JVM test can do. This is the job that makes a media3 bump reviewable — before
