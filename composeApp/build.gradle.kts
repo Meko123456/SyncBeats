@@ -117,7 +117,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 with resource shrinking. Everything that needs keeping is named in proguard-rules.pro;
+            // CI builds this variant on every push so the config cannot rot unnoticed (#32).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -139,6 +143,10 @@ android {
         // version is available" for every library would turn CI red on every upstream release
         // and bury the findings that matter (the first full run was 24 of these and 1 real one).
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+        // Same family: OldTargetApi fires once a newer platform than targetSdk is installed - true on
+        // the CI runner (API 37) and not on this machine, which is how it slipped past the local run.
+        // targetSdk moves fleet-wide together with compileSdk, not because a lint rule asked.
+        disable += "OldTargetApi"
     }
 
     packaging {
