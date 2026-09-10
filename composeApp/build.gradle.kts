@@ -131,6 +131,14 @@ android {
         // no lint task of their own in CI, so without this a warning in :feature:room would never
         // be reported anywhere - the badge would say checked while nine of ten modules were not.
         checkDependencies = true
+        // A warning nobody reads is not a check. With every module now analysed, a clean report is
+        // the state to defend: any new warning in any module fails the build, the way a failing
+        // test does.
+        warningsAsErrors = true
+        // Dependabot owns version bumps and opens a PR for each one; lint repeating "a newer
+        // version is available" for every library would turn CI red on every upstream release
+        // and bury the findings that matter (the first full run was 24 of these and 1 real one).
+        disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
     }
 
     packaging {
