@@ -126,6 +126,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    lint {
+        // Lint every module the app depends on, not just this one. The nine library modules have
+        // no lint task of their own in CI, so without this a warning in :feature:room would never
+        // be reported anywhere - the badge would say checked while nine of ten modules were not.
+        checkDependencies = true
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
