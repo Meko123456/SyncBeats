@@ -6,6 +6,19 @@
 A Compose Multiplatform app (Android + iOS) where two or more people listen to
 the same music at the same time.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/03-home.png" width="19%" alt="Home: your playlists, YouTube library card, and the trending rail with Play in room">
+  <img src="docs/screenshots/04-lobby.png" width="19%" alt="Rooms: saved rooms with one-tap Open, start a room, join by code">
+  <img src="docs/screenshots/06-search.png" width="19%" alt="Search sheet inside a room, each result with a Queue button">
+  <img src="docs/screenshots/07-room-playing.png" width="19%" alt="A room playing: code, live members, now playing with In sync status, host controls, queue">
+  <img src="docs/screenshots/demo.gif" width="19%" alt="Sign in, browse, create a room, search, play">
+</p>
+
+Taken on a Pixel 3a emulator (API 37): the Home rails, the Rooms lobby with a saved room, the
+in-room search sheet, and a room mid-track as host. The last frame cycles through the flow.
+
 ## Project layout
 
 Ten Gradle modules on Now-in-Android-style convention plugins. Every module is Kotlin
