@@ -28,8 +28,20 @@ object ErrorCopy {
 
     /** A sentence for any throwable, with [fallback] used when nothing better can be said. */
     fun of(cause: Throwable?, fallback: String): String {
-        val specific = classify(cause)
-        return specific ?: (fallback.trimEnd('.') + ". " + tail(cause, "")).trim()
+        classify(cause)?.let { return it }
+        // A rules rejection gets the caller's sentence and nothing else. Firebase says only
+        // "Permission denied", which tells a listener what happened but not why or what to do —
+        // whereas the call site knows it was a queue removal, or a host-only control, and has
+        // already said so.
+        if (isPermissionDenied(cause)) return fallback.trimEnd('.') + "."
+        return (fallback.trimEnd('.') + ". " + tail(cause, "")).trim()
+    }
+
+    /** Whether the database refused the write, as opposed to failing to reach it. */
+    private fun isPermissionDenied(cause: Throwable?): Boolean {
+        val name = cause?.let { it::class.simpleName }.orEmpty()
+        val haystack = (name + " " + cause?.message.orEmpty()).lowercase()
+        return haystack.containsAny("permission_denied", "permission denied")
     }
 
     private fun forTrack(title: String, cause: Throwable?): String {

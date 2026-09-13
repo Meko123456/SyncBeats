@@ -149,6 +149,9 @@ fun RoomScreen(
                     QueueRow(
                         item = item,
                         onPlay = { viewModel.onIntent(RoomIntent.PlayFromQueue(item)) },
+                        // The rules allow a removal only by the host or the person who queued the
+                        // track, so anybody else is offered a button that can only fail.
+                        canRemove = state.isHost || item.addedBy == state.currentUserId,
                         onRemove = { viewModel.onIntent(RoomIntent.RemoveFromQueue(item)) },
                     )
                 }
@@ -463,7 +466,12 @@ private fun ControlsRow(
 }
 
 @Composable
-private fun QueueRow(item: QueueItem, onPlay: () -> Unit, onRemove: () -> Unit) {
+private fun QueueRow(
+    item: QueueItem,
+    onPlay: () -> Unit,
+    canRemove: Boolean,
+    onRemove: () -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(8.dp),
@@ -480,7 +488,7 @@ private fun QueueRow(item: QueueItem, onPlay: () -> Unit, onRemove: () -> Unit) 
                 Text(item.artist, style = MaterialTheme.typography.bodySmall, maxLines = 1)
             }
             TextButton(onClick = onPlay) { Text("Play") }
-            TextButton(onClick = onRemove) { Text("Remove") }
+            if (canRemove) TextButton(onClick = onRemove) { Text("Remove") }
         }
     }
 }
@@ -560,9 +568,16 @@ private fun ChatSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = draft,
-                    onValueChange = { draft = it },
+                    // The database rules reject anything longer, so stopping here is the difference
+                    // between a message that cannot be typed and one that fails on send.
+                    onValueChange = { if (it.length <= RoomViewModel.CHAT_MAX_LENGTH) draft = it },
                     modifier = Modifier.weight(1f),
                     label = { Text("Message") },
+                    supportingText = if (draft.length > RoomViewModel.CHAT_MAX_LENGTH - 50) {
+                        { Text("${draft.length} / ${RoomViewModel.CHAT_MAX_LENGTH}") }
+                    } else {
+                        null
+                    },
                     singleLine = true,
                 )
                 Spacer(Modifier.width(8.dp))

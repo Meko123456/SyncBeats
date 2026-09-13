@@ -113,7 +113,9 @@ The project builds without Firebase credentials, but it needs them at runtime.
    applicationId is what Firebase keys on, so it changes only once the new one is
    registered there — see issue #3.)
 3. Download `google-services.json` and put it in the `composeApp/` directory.
-4. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
+4. In **Build → Authentication → Sign-in method**, enable **Email/Password**. Enable
+   **Google** too if you want the "Continue with Google" button and the YouTube library
+   rails to work — see [Connecting your YouTube account](#connecting-your-youtube-account).
 5. In **Build → Realtime Database**, create a database, then open the **Rules** tab
    and paste the contents of [`database.rules.json`](database.rules.json).
 
@@ -127,23 +129,27 @@ Then build and install as usual (Android Studio, or `./gradlew :composeApp:insta
 3. Either person can search and queue tracks; the host controls play/pause/seek/skip,
    and anyone can tap **Take control** to become host.
 
-## Roadmap — Phase 2: connect your Google/YouTube account
+## Connecting your YouTube account
 
-Not built yet; planned design so it isn't forgotten:
+**Continue with Google** on the sign-in screen gets both the Firebase identity and a
+`youtube.readonly` token in one tap. With it connected, the Home tab gains three rails read
+from the YouTube Data API — **Your YouTube playlists**, **Liked songs** and **New from
+subscriptions** — including the private ones a pasted link cannot reach. Playback still
+resolves through NewPipe; the Data API is only used to read the library.
 
-1. **Sign in with Google** replacing (or alongside) email/password — one tap gets
-   both the Firebase identity and a YouTube API token. Setup: enable the Google
-   provider in Firebase Auth, add the SHA-1 to the Firebase project, enable the
-   **YouTube Data API v3** in the same Google Cloud project, and configure the
-   OAuth consent screen (keep it in "testing" mode for personal use — up to 100
-   test users, no Google review).
-2. With the `youtube.readonly` scope, add Home rails for **private playlists**,
-   **Liked songs**, and **new uploads from subscriptions** via the Data API
-   (playback still resolves through NewPipe).
-3. Not possible even then: YouTube's algorithmic "My Mix"/recommendations —
-   Google exposes no API for them.
-4. Watch the API quota (10k units/day free): list endpoints cost 1 unit,
-   search costs 100 — prefer playlist/subscription list calls.
+It needs a little more setup than email/password, which is why the button reports an error
+until you do it:
+
+1. Enable the **Google** provider in Firebase Auth.
+2. Add your signing SHA-1 to the Firebase project.
+3. Enable the **YouTube Data API v3** in the same Google Cloud project.
+4. Configure the OAuth consent screen. "Testing" mode is enough for personal use — up to
+   100 test users and no Google review.
+
+Two limits worth knowing. YouTube's algorithmic "My Mix" and recommendations are not
+available to anyone: Google exposes no API for them. And the free Data API quota is 10,000
+units a day, where a list call costs 1 unit and a search costs 100 — so the rails use list
+calls and searching still goes through NewPipe.
 
 ## Caveats
 

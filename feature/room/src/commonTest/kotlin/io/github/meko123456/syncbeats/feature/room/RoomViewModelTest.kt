@@ -140,6 +140,75 @@ class RoomViewModelTest {
         assertTrue(!vm.state.value.searching)
     }
 
+    // ───────── the database saying no ─────────
+
+    /**
+     * The rules allow a queue removal only by the host or by whoever added the track, so an ordinary
+     * member tapping Remove on somebody else's item gets a rejection from Firebase. Before these
+     * were guarded that rejection reached an unhandled coroutine and killed the app - in the normal
+     * multi-user case this app exists for.
+     */
+    @Test
+    fun a_rejected_queue_removal_is_reported_rather_than_thrown() = roomTest {
+        val vm = viewModel()
+        runCurrent()
+        rooms.failWith = IllegalStateException("Firebase Database error: Permission denied")
+
+        vm.onIntent(RoomIntent.RemoveFromQueue(QueueItem(key = "q1", videoId = "v1", title = "Money Trees")))
+        runCurrent()
+
+        val error = vm.state.value.error
+        assertTrue(error != null, "a refused write must surface")
+        // The caller's sentence stands on its own - "Permission denied" would tell a listener nothing.
+        assertTrue(error!!.contains("remove"), "unhelpful copy: $error")
+        assertTrue(!error.contains("Permission denied"), "raw Firebase wording leaked: $error")
+    }
+
+    @Test
+    fun a_rejected_host_control_is_reported_rather_than_thrown() = roomTest {
+        rooms.emitMeta(RoomMeta(name = "Friday night", hostId = "someone-else"))
+        // The engine returns early when there is nothing playing, so a track has to be in flight for
+        // the control to reach Firebase at all.
+        rooms.emitPlayback(PlaybackState(videoId = "v1", title = "Money Trees", durationMs = 200_000L))
+        val vm = viewModel()
+        runCurrent()
+        rooms.failWith = IllegalStateException("Firebase Database error: Permission denied")
+
+        vm.onIntent(RoomIntent.TogglePlayPause)
+        runCurrent()
+        assertTrue(vm.state.value.error != null, "a refused playback write must surface")
+
+        vm.onIntent(RoomIntent.ClearError)
+        vm.onIntent(RoomIntent.Seek(30_000L))
+        runCurrent()
+        assertTrue(vm.state.value.error != null, "a refused seek must surface too")
+    }
+
+    @Test
+    fun a_rejected_chat_message_is_reported_rather_than_thrown() = roomTest {
+        val vm = viewModel()
+        runCurrent()
+        rooms.failWith = IllegalStateException("Firebase Database error: Permission denied")
+
+        vm.onIntent(RoomIntent.SendChat("hello"))
+        runCurrent()
+
+        assertTrue(vm.state.value.error != null)
+    }
+
+    @Test
+    fun a_chat_message_is_cut_to_the_length_the_rules_accept() = roomTest {
+        val vm = viewModel()
+        runCurrent()
+
+        vm.onIntent(RoomIntent.SendChat("x".repeat(RoomViewModel.CHAT_MAX_LENGTH + 100)))
+        runCurrent()
+
+        // The composer stops the user first; this is the second line of defence, and without it the
+        // write is refused by the rules for being too long.
+        assertEquals(RoomViewModel.CHAT_MAX_LENGTH, rooms.chatSent.single().length)
+    }
+
     @Test
     fun a_failed_search_is_reported_as_a_sentence() = roomTest {
         music.failWith = IllegalStateException("no network")

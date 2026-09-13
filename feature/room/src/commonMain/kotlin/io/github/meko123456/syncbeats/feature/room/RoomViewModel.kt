@@ -355,55 +355,75 @@ class RoomViewModel(
             val currentPlayback = state.value.playback
             val noHost = state.value.meta?.hostId.isNullOrBlank()
             val nothingPlaying = currentPlayback == null || currentPlayback.videoId.isBlank()
-            if (nothingPlaying && (state.value.isHost || noHost)) {
-                if (noHost) firebase.takeControl(roomId, uid)
-                syncEngine.hostLoadTrack(item)
-                return@launch
-            }
-            firebase.addToQueue(roomId, item, uid)
+            runCatching {
+                if (nothingPlaying && (state.value.isHost || noHost)) {
+                    if (noHost) firebase.takeControl(roomId, uid)
+                    syncEngine.hostLoadTrack(item)
+                } else {
+                    firebase.addToQueue(roomId, item, uid)
+                }
+            }.onFailure { _error.value = ErrorCopy.of(it, "Could not add that track to the queue") }
         }
     }
 
     private fun playFromQueue(item: QueueItem) {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
-            if (!state.value.isHost) firebase.takeControl(roomId, uid)
-            syncEngine.hostLoadTrack(item)
-            firebase.removeFromQueue(roomId, item.key)
+            runCatching {
+                if (!state.value.isHost) firebase.takeControl(roomId, uid)
+                syncEngine.hostLoadTrack(item)
+                firebase.removeFromQueue(roomId, item.key)
+            }.onFailure { _error.value = ErrorCopy.of(it, "Could not play that track") }
         }
     }
 
     private fun removeFromQueue(item: QueueItem) {
         viewModelScope.launch {
-            firebase.removeFromQueue(roomId, item.key)
+            runCatching { firebase.removeFromQueue(roomId, item.key) }
+                .onFailure {
+                    _error.value =
+                        ErrorCopy.of(it, "Only the host or whoever added a track can remove it")
+                }
         }
     }
 
     private fun togglePlayPause() {
-        viewModelScope.launch { syncEngine.hostTogglePlayPause() }
+        viewModelScope.launch {
+            runCatching { syncEngine.hostTogglePlayPause() }
+                .onFailure { _error.value = ErrorCopy.of(it, "Only the host can control playback") }
+        }
     }
 
     private fun seek(positionMs: Long) {
-        viewModelScope.launch { syncEngine.hostSeek(positionMs) }
+        viewModelScope.launch {
+            runCatching { syncEngine.hostSeek(positionMs) }
+                .onFailure { _error.value = ErrorCopy.of(it, "Only the host can control playback") }
+        }
     }
 
     private fun skipNext() {
         viewModelScope.launch {
-            val next = state.value.queue.firstOrNull() ?: run {
-                syncEngine.hostStop()
-                return@launch
-            }
+            val next = state.value.queue.firstOrNull()
             val uid = authRepo.currentUser()?.uid ?: return@launch
-            if (!state.value.isHost) firebase.takeControl(roomId, uid)
-            syncEngine.hostLoadTrack(next)
-            firebase.removeFromQueue(roomId, next.key)
+            runCatching {
+                if (next == null) {
+                    syncEngine.hostStop()
+                } else {
+                    if (!state.value.isHost) firebase.takeControl(roomId, uid)
+                    syncEngine.hostLoadTrack(next)
+                    firebase.removeFromQueue(roomId, next.key)
+                }
+            }.onFailure { _error.value = ErrorCopy.of(it, "Could not skip to the next track") }
         }
     }
 
     private fun takeControl() {
         viewModelScope.launch {
             val uid = authRepo.currentUser()?.uid ?: return@launch
-            firebase.takeControl(roomId, uid)
+            runCatching { firebase.takeControl(roomId, uid) }
+                .onFailure {
+                    _error.value = ErrorCopy.of(it, "Only someone already in the room can take control")
+                }
         }
     }
 
@@ -469,16 +489,29 @@ class RoomViewModel(
         if (text.isBlank()) return
         viewModelScope.launch {
             val user = authRepo.currentUser() ?: return@launch
-            firebase.sendChat(
-                roomId = roomId,
-                userId = user.uid,
-                username = state.value.currentUsername,
-                text = text.trim(),
-            )
+            runCatching {
+                firebase.sendChat(
+                    roomId = roomId,
+                    userId = user.uid,
+                    username = state.value.currentUsername,
+                    // The rules cap a message at CHAT_MAX_LENGTH characters and reject anything
+                    // longer. The composer stops there too, so this is a second line of defence
+                    // rather than the only one.
+                    text = text.trim().take(CHAT_MAX_LENGTH),
+                )
+            }.onFailure { _error.value = ErrorCopy.of(it, "Could not send that message") }
         }
     }
 
-    private companion object {
+    internal companion object {
+        /**
+         * The longest chat message the database rules will accept.
+         *
+         * Kept in one place because it is asserted in two: `database.rules.json` rejects anything
+         * longer, and the composer stops the user before they get there.
+         */
+        internal const val CHAT_MAX_LENGTH: Int = 500
+
         /** Often enough for the indicator to be honest, rarely enough to be free. */
         const val STATUS_TICK_MS = 1_000L
     }

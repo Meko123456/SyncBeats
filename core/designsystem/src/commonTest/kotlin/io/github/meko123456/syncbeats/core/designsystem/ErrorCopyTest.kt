@@ -119,4 +119,20 @@ class ErrorCopyTest {
             assertFalse(message.contains(".."), "\"$message\" has doubled punctuation")
         }
     }
+
+    @Test
+    fun a_refused_write_gets_the_caller_sentence_and_nothing_else() {
+        val refused = IllegalStateException("Firebase Database error: Permission denied")
+        val copy = ErrorCopy.of(refused, "Only the host or whoever added a track can remove it")
+
+        // The call site knows what was being attempted; Firebase only knows it said no. Quoting it
+        // would add "Permission denied." to a sentence that already explains the rule.
+        assertEquals("Only the host or whoever added a track can remove it.", copy)
+    }
+
+    @Test
+    fun a_failure_that_is_not_a_refusal_still_quotes_itself() {
+        val copy = ErrorCopy.of(IllegalStateException("disk full"), "Could not save")
+        assertEquals("Could not save. disk full.", copy)
+    }
 }
