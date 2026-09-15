@@ -90,10 +90,10 @@ jobs:
           path: composeApp/build/reports/androidTests/
 
   ios:
-    # Compile only, and deliberately so. The iOS targets cannot be *linked* yet: the GitLive
-    # Firebase bindings need the Firebase iOS SDK frameworks, which this repo has no Xcode project
-    # or CocoaPods integration for (see the iOS issue). Compiling still catches the regression that
-    # actually happens — code in commonMain that only works on the JVM.
+    # Two halves: the modules whose tests genuinely run on a simulator, and the two that can only
+    # be compiled. Only :core:data and :composeApp reach the GitLive bindings, which need Firebase
+    # iOS SDK frameworks this repo has no Xcode or CocoaPods integration for (issue #13); every
+    # other module links cleanly, so its tests run here rather than on the JVM alone.
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -105,16 +105,24 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
-      - name: Compile the iOS targets
+      - name: Run the iOS tests that link, compile the rest
         run: |
-          # :core:model and :core:domain have no Firebase dependency, so their tests LINK and RUN
-          # on a simulator — 50 tests actually executed on iOS rather than merely compiled.
+          # Every module with no Firebase in commonMain *or* commonTest links a test binary and
+          # runs it on a simulator — all seven that have tests at all, 122 of them actually
+          # executed on iOS rather than merely compiled. The four feature modules qualify because
+          # a screen depends on :core:domain and never :core:data, so the ports keep GitLive out
+          # of the test graph; :core:testing has no tests, only the fakes the features use.
           ./gradlew :core:model:iosSimulatorArm64Test \
                     :core:domain:iosSimulatorArm64Test \
-                    :core:designsystem:iosSimulatorArm64Test --stacktrace
-          # Everything downstream of the GitLive bindings cannot be *linked* until the Firebase
-          # iOS SDK is integrated (issue #13), so those stay compile-only. Compiling still catches
-          # the regression that actually happens: commonMain code that only works on the JVM.
+                    :core:designsystem:iosSimulatorArm64Test \
+                    :feature:auth:iosSimulatorArm64Test \
+                    :feature:lobby:iosSimulatorArm64Test \
+                    :feature:home:iosSimulatorArm64Test \
+                    :feature:room:iosSimulatorArm64Test --stacktrace
+          # :core:data holds the GitLive bindings and :composeApp depends on it, so linking either
+          # test binary dies with `ld: framework 'FirebaseCore' not found` until the Firebase iOS
+          # SDK is integrated (issue #13). Those two stay compile-only, which still catches the
+          # regression that actually happens: commonMain code that only works on the JVM.
           ./gradlew :core:data:compileKotlinIosSimulatorArm64 \
                     :composeApp:compileKotlinIosSimulatorArm64 \
                     :composeApp:compileKotlinIosArm64 \
