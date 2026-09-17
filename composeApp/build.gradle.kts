@@ -100,7 +100,7 @@ kotlin {
 
 android {
     namespace = "io.github.meko123456.syncbeats"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         // Still com.example: the applicationId is the identity Firebase and the Play Store key
@@ -145,7 +145,10 @@ android {
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
         // Same family: OldTargetApi fires once a newer platform than targetSdk is installed - true on
         // the CI runner (API 37) and not on this machine, which is how it slipped past the local run.
-        // targetSdk moves fleet-wide together with compileSdk, not because a lint rule asked.
+        // targetSdk deliberately stays at 36 while compileSdk is 37: compileSdk only widens the API
+        // surface available at compile time, targetSdk changes how the app behaves at runtime, and
+        // that is a decision to take on its own rather than as a side effect of a dependency
+        // needing a newer compile target. So this fires permanently now, not occasionally.
         disable += "OldTargetApi"
     }
 

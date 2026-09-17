@@ -32,7 +32,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         }
 
         extensions.configure(LibraryExtension::class.java) {
-            compileSdk = 36
+            // 37 because AndroidX now requires it: Compose BOM 2026.09.00 and core-ktx 1.19.0 ship
+            // AARs whose metadata declares a minimum compileSdk of 37, and a module on 36 fails at
+            // checkAarMetadata before compiling a line.
+            compileSdk = 37
             defaultConfig {
                 minSdk = 26
             }
