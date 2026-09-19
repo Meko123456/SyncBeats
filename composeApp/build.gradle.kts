@@ -109,7 +109,7 @@ android {
         // Tracked on issue #3. The source package and namespace are already renamed.
         applicationId = "com.example.myapplicationmusicsharing"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 2
         versionName = "2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -143,13 +143,6 @@ android {
         // version is available" for every library would turn CI red on every upstream release
         // and bury the findings that matter (the first full run was 24 of these and 1 real one).
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
-        // Same family: OldTargetApi fires once a newer platform than targetSdk is installed - true on
-        // the CI runner (API 37) and not on this machine, which is how it slipped past the local run.
-        // targetSdk deliberately stays at 36 while compileSdk is 37: compileSdk only widens the API
-        // surface available at compile time, targetSdk changes how the app behaves at runtime, and
-        // that is a decision to take on its own rather than as a side effect of a dependency
-        // needing a newer compile target. So this fires permanently now, not occasionally.
-        disable += "OldTargetApi"
     }
 
     packaging {
