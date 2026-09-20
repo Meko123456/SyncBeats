@@ -47,7 +47,10 @@ targets:
     preBuildScripts:
       - name: Compile Kotlin Framework
         script: |
-          export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+          # Default, never override. A hardcoded Android Studio path is right on a developer's Mac
+          # and wrong on a CI runner, where setup-java has already put a JDK on JAVA_HOME and that
+          # directory does not exist — which is exactly how the first CI run of this job failed.
+          export JAVA_HOME="${JAVA_HOME:-/Applications/Android Studio.app/Contents/jbr/Contents/Home}"
           cd "$SRCROOT/.."
           ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
