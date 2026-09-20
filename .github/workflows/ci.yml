@@ -91,9 +91,18 @@ jobs:
 
   ios:
     # Two halves: the modules whose tests genuinely run on a simulator, and the two that can only
-    # be compiled. Only :core:data and :composeApp reach the GitLive bindings, which need Firebase
-    # iOS SDK frameworks this repo has no Xcode or CocoaPods integration for (issue #13); every
-    # other module links cleanly, so its tests run here rather than on the JVM alone.
+    # be compiled. Only :core:data and :composeApp reach the GitLive bindings, which need the
+    # Firebase iOS SDK frameworks.
+    #
+    # The reason those two stop at compiling is narrower than it used to say here, and the old
+    # wording — "this repo has no Xcode or CocoaPods integration" — was simply wrong: iosApp/ has
+    # integrated firebase-ios-sdk through SwiftPM and XcodeGen since the first commit. What a Swift
+    # app gets and a Kotlin test binary does not is a link step that resolves those frameworks. A
+    # static framework can defer undefined symbols to whoever embeds it; a test.kexe has nobody to
+    # defer to and must resolve everything itself.
+    #
+    # So the gap is real but small, and issue #13 has been corrected to describe it accurately.
+    # Every other module links cleanly, so its tests run here rather than on the JVM alone.
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
