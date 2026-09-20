@@ -23,6 +23,13 @@ targets:
         FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
         OTHER_LDFLAGS: "$(inherited) -framework ComposeApp"
         ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # :composeApp declares iosArm64 and iosSimulatorArm64 and deliberately not iosX64 — no
+        # machine here or on CI is Intel. But `-destination 'generic/platform=iOS Simulator'` asks
+        # Xcode for every simulator architecture, so it requests x86_64, the Kotlin plugin has no
+        # target for it, and the build dies with "Unknown iOS simulator arch: 'x86_64'".
+        #
+        # Stated once here rather than as a flag every xcodebuild invocation has to remember.
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
         # Ad-hoc signing: free, works on simulator, and grants the keychain
         # entitlement Firebase Auth needs to store its session.
         CODE_SIGN_IDENTITY: "-"

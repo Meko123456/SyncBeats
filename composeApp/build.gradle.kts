@@ -23,13 +23,23 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            // The Swift side implements GoogleAuthController, which lives in :core:domain. A
+            // Kotlin framework only publishes types from modules it exports, so without this the
+            // header has no such type and iosApp fails to compile — which nothing noticed, because
+            // nothing built iosApp.
+            //
+            // export requires the dependency be `api` rather than `implementation`, which is why
+            // :core:domain is declared that way below and the others are not.
+            export(project(":core:domain"))
+            // GoogleTokens, the type that callback hands back, lives here.
+            export(project(":core:model"))
         }
     }
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":core:model"))
-            implementation(project(":core:domain"))
+            api(project(":core:model"))
+            api(project(":core:domain"))
             implementation(project(":core:data"))
             implementation(project(":core:designsystem"))
             implementation(project(":feature:auth"))
