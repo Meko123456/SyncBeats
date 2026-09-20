@@ -136,6 +136,65 @@ jobs:
                     :composeApp:compileKotlinIosSimulatorArm64 \
                     :composeApp:compileKotlinIosArm64 --stacktrace
 
+  iosApp:
+    # Builds the Swift app, not just the Kotlin framework it links against. Until today nothing
+    # did, and it had stopped compiling: the framework published neither type the Swift needed and
+    # the simulator architecture was wrong. Both were invisible for exactly as long as nobody built
+    # this.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # GoogleService-Info.plist is developer-specific and git-ignored, exactly as
+      # google-services.json is on the Android side. Firebase only reads it at runtime, so a
+      # stand-in is enough to compile and link — and this job is a compile check, not a Firebase
+      # one. The values are deliberately obvious nonsense so nobody mistakes the file for real
+      # configuration.
+      - name: Write a placeholder Firebase config
+        run: |
+          cat > iosApp/iosApp/GoogleService-Info.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key><string>placeholder</string>
+            <key>GCM_SENDER_ID</key><string>000000000000</string>
+            <key>PLIST_VERSION</key><string>1</string>
+            <key>BUNDLE_ID</key><string>com.example.myapplicationmusicsharing</string>
+            <key>PROJECT_ID</key><string>placeholder</string>
+            <key>STORAGE_BUCKET</key><string>placeholder.appspot.com</string>
+            <key>IS_ADS_ENABLED</key><false/>
+            <key>IS_ANALYTICS_ENABLED</key><false/>
+            <key>IS_APPINVITE_ENABLED</key><false/>
+            <key>IS_GCM_ENABLED</key><true/>
+            <key>IS_SIGNIN_ENABLED</key><true/>
+            <key>GOOGLE_APP_ID</key><string>1:000000000000:ios:0000000000000000</string>
+            <key>DATABASE_URL</key><string>https://placeholder.firebaseio.com</string>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Generate the Xcode project
+        working-directory: iosApp
+        run: xcodegen generate
+
+      - name: Build the iOS app
+        working-directory: iosApp
+        run: |
+          xcodebuild -project iosApp.xcodeproj -scheme iosApp \
+                     -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+                     -configuration Debug build
+
   rules:
     # The security rules are the only thing between a room and anyone with an account, so they get
     # a real test run: the Firebase emulator, against the actual rules file. Java is here because

@@ -2,13 +2,17 @@ name: iosApp
 options:
   deploymentTarget:
     iOS: "16.0"
+# Exact versions, not `from:`. The Xcode project is generated rather than committed, and the
+# SwiftPM lockfile lives inside it — so a range here would mean every checkout and every CI run
+# resolving whatever happens to be newest, with nothing recording what was actually built. These
+# are the versions the previously committed Package.resolved had pinned.
 packages:
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk
-    from: 12.0.0
+    exactVersion: 12.16.0
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS
-    from: 9.0.0
+    exactVersion: 9.2.0
 targets:
   iosApp:
     type: application
