@@ -82,6 +82,23 @@ jobs:
           # (a missing binding is invisible to the compiler and three ViewModels sit behind sign-in).
           script: ./gradlew :core:data:connectedDebugAndroidTest :composeApp:connectedDebugAndroidTest --stacktrace
 
+      # The connected task can pass having run nothing. On AGP 9 a failed APK install is only
+      # logged ("AndroidTestRunner failed on emulator-5554") and the task still ends BUILD
+      # SUCCESSFUL with a report of 0 tests; HabitStreaks' Android 17 job went green like that
+      # twice. So each module's report is read, and the job fails if one of them ran no tests.
+      - name: Check the instrumented tests actually ran
+        run: |
+          python3 - core/data composeApp <<'PY'
+          import re, sys
+          ran = True
+          for module in sys.argv[1:]:
+              page = open(f"{module}/build/reports/androidTests/connected/debug/index.html").read()
+              count = {k: int(re.search(rf'id="{k}">\s*<div class="counter">(\d+)</div>', page).group(1)) for k in ("tests", "failures", "skipped")}
+              print(f"{module}: {count['tests']} tests, {count['failures']} failed, {count['skipped']} skipped")
+              ran &= count["tests"] > 0
+          sys.exit(0 if ran else 1)
+          PY
+
       - name: Upload the report when it fails
         if: failure()
         uses: actions/upload-artifact@v7
