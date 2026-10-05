@@ -9,9 +9,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Every job has a timeout of about three times its slowest green run (measured October 2026).
+# GitHub's default is six hours, and a job that hangs (a simulator or emulator that never comes
+# up, say) would otherwise hold the run, and keep its log unreadable, for all of them.
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -39,6 +43,7 @@ jobs:
     # audio, which no JVM test can do. This is the job that makes a media3 bump reviewable — before
     # it existed the only check was somebody remembering to sign in and press play.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -121,6 +126,7 @@ jobs:
     # So the gap is real but small, and issue #13 has been corrected to describe it accurately.
     # Every other module links cleanly, so its tests run here rather than on the JVM alone.
     runs-on: macos-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
 
@@ -159,6 +165,7 @@ jobs:
     # the simulator architecture was wrong. Both were invisible for exactly as long as nobody built
     # this.
     runs-on: macos-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
 
@@ -217,6 +224,7 @@ jobs:
     # a real test run: the Firebase emulator, against the actual rules file. Java is here because
     # the emulator is a Java process.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -246,6 +254,7 @@ jobs:
     # every check was green. This installs the R8 build on an emulator, opens it, and fails if it
     # crashes or is not running fifteen seconds later. Proven both ways in Nabiji #13.
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
