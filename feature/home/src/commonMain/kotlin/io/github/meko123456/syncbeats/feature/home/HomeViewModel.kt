@@ -14,6 +14,7 @@ import io.github.meko123456.syncbeats.core.model.PlaylistDetails
 import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SearchResult
+import io.github.meko123456.syncbeats.core.model.capped
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -236,7 +237,7 @@ class HomeViewModel(
         if (hostId.isEmpty() || items.isEmpty()) return
         viewModelScope.launch {
             runCatching {
-                val code = firebase.createRoom(hostId, roomName.take(40))
+                val code = firebase.createRoom(hostId, roomName.capped(40))
                 items.forEach { firebase.addToQueue(code, it, hostId) }
                 code
             }

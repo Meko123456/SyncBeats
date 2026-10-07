@@ -168,6 +168,18 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun an_emoji_across_the_room_name_cap_is_left_out_whole() = runTest(dispatcher) {
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // 39 chars, then 🔥 across the cap at 40: a plain take(40) kept half of it.
+        vm.onIntent(HomeIntent.PlayTrackInNewRoom(track("v1", "T".repeat(39) + "\uD83D\uDD25 Live")))
+        advanceUntilIdle()
+
+        assertEquals("T".repeat(39), rooms.createdRooms.single().second)
+    }
+
+    @Test
     fun playing_a_playlist_queues_its_tracks_in_order() = runTest(dispatcher) {
         val vm = viewModel()
         advanceUntilIdle()
