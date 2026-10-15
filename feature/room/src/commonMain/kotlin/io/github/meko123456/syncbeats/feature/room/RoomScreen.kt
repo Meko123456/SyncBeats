@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.designsystem.PlatformBackHandler
+import io.github.meko123456.syncbeats.core.designsystem.trackCount
 import io.github.meko123456.syncbeats.core.domain.sync.ListenerStatus
 import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.SearchResult
@@ -242,7 +243,7 @@ private fun LibrarySheet(
                                     )
                                 },
                                 headlineContent = { Text(playlist.title, maxLines = 1) },
-                                supportingContent = { Text("${playlist.trackCount} tracks") },
+                                supportingContent = { Text(trackCount(playlist.trackCount)) },
                                 modifier = Modifier.clickable { onOpenPlaylist(playlist) },
                             )
                         }
@@ -284,7 +285,7 @@ private fun LibrarySheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(opened.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-                        Text("${opened.tracks.size} tracks", style = MaterialTheme.typography.bodySmall)
+                        Text(trackCount(opened.tracks.size), style = MaterialTheme.typography.bodySmall)
                     }
                     TextButton(onClick = onClosePlaylist) { Text("Back") }
                 }
