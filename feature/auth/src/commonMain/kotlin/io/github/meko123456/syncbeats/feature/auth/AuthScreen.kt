@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -68,12 +70,24 @@ fun AuthScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            val canSubmit = !state.loading &&
+                email.isNotBlank() &&
+                password.isNotBlank() &&
+                (tab == 0 || username.isNotBlank())
+            val submit = {
+                if (tab == 0) onSignIn(email.trim(), password)
+                else onSignUp(email.trim(), password, username)
+            }
+
+            // The keyboard's action key goes down the form, and on the password does what the
+            // button does, and nothing while the button is disabled.
             if (tab == 1) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("Username") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -82,7 +96,11 @@ fun AuthScreen(
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    autoCorrectEnabled = false,
+                    imeAction = ImeAction.Next,
+                ),
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
@@ -91,19 +109,18 @@ fun AuthScreen(
                 label = { Text("Password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    autoCorrectEnabled = false,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(onDone = { if (canSubmit) submit() }),
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Button(
-                onClick = {
-                    if (tab == 0) onSignIn(email.trim(), password)
-                    else onSignUp(email.trim(), password, username)
-                },
-                enabled = !state.loading &&
-                    email.isNotBlank() &&
-                    password.isNotBlank() &&
-                    (tab == 0 || username.isNotBlank()),
+                onClick = submit,
+                enabled = canSubmit,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(if (tab == 0) "Sign in" else "Create account")
