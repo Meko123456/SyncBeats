@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
@@ -47,6 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -372,12 +376,17 @@ private fun TrendingRow(track: SearchResult, onPlay: () -> Unit) {
 }
 
 @Composable
-private fun ImportPlaylistDialog(
+internal fun ImportPlaylistDialog(
     importing: Boolean,
     onImport: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var url by remember { mutableStateOf("") }
+    val canAdd = url.isNotBlank() && !importing
+    val add = {
+        onImport(url)
+        onDismiss()
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add YouTube playlist") },
@@ -389,19 +398,20 @@ private fun ImportPlaylistDialog(
                     onValueChange = { url = it },
                     label = { Text("Playlist URL") },
                     singleLine = true,
+                    // A link keyboard with nothing to autocorrect, and Go adds it as Add does.
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Go,
+                    ),
+                    keyboardActions = KeyboardActions(onGo = { if (canAdd) add() }),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (importing) CircularProgressIndicator()
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    onImport(url)
-                    onDismiss()
-                },
-                enabled = url.isNotBlank() && !importing,
-            ) { Text("Add") }
+            TextButton(onClick = add, enabled = canAdd) { Text("Add") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
