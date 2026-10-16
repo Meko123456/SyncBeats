@@ -20,9 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -121,7 +121,7 @@ fun RoomScreen(
                     Icon(Icons.Default.LibraryMusic, contentDescription = "Library")
                 }
                 FloatingActionButton(onClick = { showChat = true }) {
-                    Icon(Icons.Default.Chat, contentDescription = "Chat")
+                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Chat")
                 }
                 FloatingActionButton(onClick = { showSearch = true }) {
                     Icon(Icons.Default.Search, contentDescription = "Search")
