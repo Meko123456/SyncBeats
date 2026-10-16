@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -114,6 +117,11 @@ fun LobbyScreen(
                         onValueChange = { roomName = it },
                         label = { Text("Room name (optional)") },
                         singleLine = true,
+                        // The keyboard's action key does what the button below does.
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                        keyboardActions = KeyboardActions(onGo = {
+                            if (!state.loading) viewModel.onIntent(LobbyIntent.CreateRoom(roomName))
+                        }),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Button(
@@ -139,9 +147,15 @@ fun LobbyScreen(
                         onValueChange = { code = RoomCode.normalise(it).take(RoomCode.LENGTH) },
                         label = { Text("Room code") },
                         singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Characters,
+                            imeAction = ImeAction.Go,
                         ),
+                        // Joins, like the button below. With a code that can't be one the button is
+                        // disabled and says nothing; the action key gets the reason instead.
+                        keyboardActions = KeyboardActions(onGo = {
+                            if (!state.loading) viewModel.onIntent(LobbyIntent.JoinRoom(code))
+                        }),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     OutlinedButton(

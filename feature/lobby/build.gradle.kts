@@ -5,3 +5,12 @@ plugins {
 android {
     namespace = "io.github.meko123456.syncbeats.feature.lobby"
 }
+
+kotlin {
+    sourceSets {
+        // Compose UI tests run on the iOS simulator, as in :feature:auth.
+        iosTest.dependencies {
+            implementation(libs.compose.ui.test)
+        }
+    }
+}
