@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -55,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -495,7 +498,7 @@ private fun QueueRow(
 }
 
 @Composable
-private fun SearchSheet(
+internal fun SearchSheet(
     results: List<SearchResult>,
     searching: Boolean,
     onSearch: (String) -> Unit,
@@ -514,6 +517,9 @@ private fun SearchSheet(
                     modifier = Modifier.weight(1f),
                     label = { Text("Search") },
                     singleLine = true,
+                    // The keyboard's search key does what the button beside it does.
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
                 )
                 Spacer(Modifier.width(8.dp))
                 IconButton(onClick = { onSearch(query) }) {
@@ -548,7 +554,7 @@ private fun SearchSheet(
 }
 
 @Composable
-private fun ChatSheet(
+internal fun ChatSheet(
     state: RoomUiState,
     onSend: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -556,6 +562,11 @@ private fun ChatSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         var draft by remember { mutableStateOf("") }
+        val send = {
+            if (draft.isNotBlank()) {
+                onSend(draft); draft = ""
+            }
+        }
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Chat", style = MaterialTheme.typography.titleMedium)
             LazyColumn(modifier = Modifier.fillMaxWidth().height(420.dp), reverseLayout = false) {
@@ -580,13 +591,12 @@ private fun ChatSheet(
                         null
                     },
                     singleLine = true,
+                    // The keyboard's send key does what the button beside it does.
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { send() }),
                 )
                 Spacer(Modifier.width(8.dp))
-                TextButton(onClick = {
-                    if (draft.isNotBlank()) {
-                        onSend(draft); draft = ""
-                    }
-                }) { Text("Send") }
+                TextButton(onClick = send) { Text("Send") }
             }
         }
     }

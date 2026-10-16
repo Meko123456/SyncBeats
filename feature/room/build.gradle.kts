@@ -12,5 +12,9 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.compose.material.icons.extended)
         }
+        // Compose UI tests run on the iOS simulator, as in :feature:auth.
+        iosTest.dependencies {
+            implementation(libs.compose.ui.test)
+        }
     }
 }
