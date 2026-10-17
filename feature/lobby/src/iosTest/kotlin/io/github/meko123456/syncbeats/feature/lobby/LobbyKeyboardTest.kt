@@ -41,7 +41,7 @@ class LobbyKeyboardTest {
         onNodeWithText("Room code").performImeAction()
         // The Join button stays disabled for this, and said nothing about why.
         waitUntil(timeoutMillis = 5_000) {
-            onAllNodesWithText("Error: Room codes are 6 characters — that one has 3.").fetchSemanticsNodes().isNotEmpty()
+            onAllNodesWithText("Room codes are 6 characters — that one has 3.").fetchSemanticsNodes().isNotEmpty()
         }
     }
 }

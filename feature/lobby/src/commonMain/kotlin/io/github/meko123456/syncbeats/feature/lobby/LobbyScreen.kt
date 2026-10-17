@@ -171,7 +171,7 @@ fun LobbyScreen(
                 CircularProgressIndicator()
             }
             state.error?.let {
-                Text("Error: $it", color = MaterialTheme.colorScheme.error)
+                Text(it, color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = { viewModel.onIntent(LobbyIntent.ClearError) }) { Text("Dismiss") }
             }
         }

@@ -228,7 +228,7 @@ fun HomeScreen(
             state.error?.let { err ->
                 item {
                     Column(Modifier.padding(horizontal = 16.dp)) {
-                        Text("Error: $err", color = MaterialTheme.colorScheme.error)
+                        Text(err, color = MaterialTheme.colorScheme.error)
                         TextButton(onClick = { viewModel.onIntent(HomeIntent.ClearError) }) { Text("Dismiss") }
                     }
                 }

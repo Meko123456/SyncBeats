@@ -142,7 +142,7 @@ fun AuthScreen(
             }
             state.error?.let {
                 Spacer(Modifier.height(8.dp))
-                Text("Error: $it", color = MaterialTheme.colorScheme.error)
+                Text(it, color = MaterialTheme.colorScheme.error)
             }
         }
     }
