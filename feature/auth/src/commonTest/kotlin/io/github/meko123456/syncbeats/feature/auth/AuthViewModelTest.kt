@@ -91,7 +91,21 @@ class AuthViewModelTest {
 
         assertFalse(vm.state.value.signedIn)
         assertFalse(vm.state.value.loading, "loading must not be left on after a failure")
-        assertEquals("wrong password", vm.state.value.error)
+        assertEquals("Could not sign in. wrong password.", vm.state.value.error)
+    }
+
+    @Test
+    fun a_failure_without_a_message_still_says_something() = runTest(dispatcher) {
+        // The error was the exception's message, so a failure without one set it to null and
+        // the spinner stopped with nothing on screen at all.
+        auth.failWith = IllegalStateException()
+        val vm = viewModel()
+
+        vm.onIntent(AuthIntent.SignIn("zura@example.com", "nope"))
+        advanceUntilIdle()
+
+        assertEquals("Could not sign in.", vm.state.value.error)
+        assertFalse(vm.state.value.loading)
     }
 
     @Test
@@ -150,7 +164,7 @@ class AuthViewModelTest {
         advanceUntilIdle()
 
         assertFalse(vm.state.value.signedIn)
-        assertEquals("cancelled by user", vm.state.value.error)
+        assertEquals("Could not sign in with Google. cancelled by user.", vm.state.value.error)
         assertFalse(vm.state.value.loading)
     }
 

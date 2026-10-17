@@ -2,6 +2,7 @@ package io.github.meko123456.syncbeats.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
 import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
@@ -59,7 +60,7 @@ class AuthViewModel(
                     }
                 }
                 .onFailure { t ->
-                    _state.update { it.copy(loading = false, error = t.message) }
+                    _state.update { it.copy(loading = false, error = ErrorCopy.of(t, "Could not sign in")) }
                 }
         }
     }
@@ -88,7 +89,7 @@ class AuthViewModel(
                     }
                 }
                 .onFailure { t ->
-                    _state.update { it.copy(loading = false, error = t.message) }
+                    _state.update { it.copy(loading = false, error = ErrorCopy.of(t, "Could not create the account")) }
                 }
         }
     }
@@ -113,7 +114,7 @@ class AuthViewModel(
                     }
                 }
                 .onFailure { t ->
-                    _state.update { it.copy(loading = false, error = t.message) }
+                    _state.update { it.copy(loading = false, error = ErrorCopy.of(t, "Could not sign in with Google")) }
                 }
         }
     }
