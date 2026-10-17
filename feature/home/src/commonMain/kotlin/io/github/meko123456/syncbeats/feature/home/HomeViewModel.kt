@@ -8,6 +8,7 @@ import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
 import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 import io.github.meko123456.syncbeats.core.domain.repository.YouTubeAccountGateway
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleSignInCancelled
 import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
 import io.github.meko123456.syncbeats.core.model.AccountPlaylist
 import io.github.meko123456.syncbeats.core.model.HistoryItem
@@ -149,7 +150,7 @@ class HomeViewModel(
         viewModelScope.launch {
             runCatching { google.signInSuspend() }
                 .onSuccess { loadYouTubeRails() }
-                .onFailure { _error.value = ErrorCopy.of(it, "Could not connect YouTube") }
+                .onFailure { if (it !is GoogleSignInCancelled) _error.value = ErrorCopy.of(it, "Could not connect YouTube") }
         }
     }
 

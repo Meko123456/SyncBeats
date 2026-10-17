@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
+import io.github.meko123456.syncbeats.core.domain.repository.GoogleSignInCancelled
 import io.github.meko123456.syncbeats.core.domain.repository.signInSuspend
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -114,7 +115,9 @@ class AuthViewModel(
                     }
                 }
                 .onFailure { t ->
-                    _state.update { it.copy(loading = false, error = ErrorCopy.of(t, "Could not sign in with Google")) }
+                    // Backing out of Google's sheet is not something to answer with an error.
+                    val error = if (t is GoogleSignInCancelled) null else ErrorCopy.of(t, "Could not sign in with Google")
+                    _state.update { it.copy(loading = false, error = error) }
                 }
         }
     }

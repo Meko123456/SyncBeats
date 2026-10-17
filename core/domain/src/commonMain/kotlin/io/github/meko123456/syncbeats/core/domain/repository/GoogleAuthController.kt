@@ -11,7 +11,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * Credential Manager + AuthorizationClient.
  */
 interface GoogleAuthController {
-    /** Interactive sign-in requesting the youtube.readonly scope. */
+    /**
+     * Interactive sign-in requesting the youtube.readonly scope. The callback gets the tokens, or
+     * a message saying what went wrong, or neither: neither means the person closed Google's sheet
+     * without picking an account, which is a choice rather than a failure.
+     */
     fun signIn(callback: (GoogleTokens?, String?) -> Unit)
 
     /** Fresh access token for YouTube API calls, or null if not connected. */
@@ -20,12 +24,18 @@ interface GoogleAuthController {
     fun signOut()
 }
 
+/** What [signInSuspend] throws when the person backed out of Google's sign-in: nothing to report. */
+class GoogleSignInCancelled : Exception("Google sign-in was cancelled")
+
 suspend fun GoogleAuthController.signInSuspend(): GoogleTokens =
     suspendCancellableCoroutine { cont ->
         signIn { tokens, error ->
             if (!cont.isCompleted) {
-                if (tokens != null) cont.resume(tokens)
-                else cont.resumeWith(Result.failure(IllegalStateException(error ?: "Google sign-in failed")))
+                when {
+                    tokens != null -> cont.resume(tokens)
+                    error == null -> cont.resumeWith(Result.failure(GoogleSignInCancelled()))
+                    else -> cont.resumeWith(Result.failure(IllegalStateException(error)))
+                }
             }
         }
     }

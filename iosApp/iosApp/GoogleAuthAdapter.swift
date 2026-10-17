@@ -32,7 +32,13 @@ class GoogleAuthAdapter: GoogleAuthController {
                 additionalScopes: [self.youtubeScope]
             ) { result, error in
                 if let error = error {
-                    callback(nil, error.localizedDescription)
+                    // Closing Google's sheet is a choice, not a failure: no message, so the
+                    // sign-in screen does not answer it in red.
+                    if let signInError = error as? GIDSignInError, signInError.code == .canceled {
+                        callback(nil, nil)
+                    } else {
+                        callback(nil, error.localizedDescription)
+                    }
                     return
                 }
                 guard let user = result?.user, let idToken = user.idToken?.tokenString else {

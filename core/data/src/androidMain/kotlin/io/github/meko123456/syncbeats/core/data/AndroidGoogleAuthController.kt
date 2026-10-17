@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.IntentSenderRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
@@ -92,6 +93,9 @@ class AndroidGoogleAuthController(private val context: Context) : GoogleAuthCont
                     ),
                     null,
                 )
+            } catch (e: GetCredentialCancellationException) {
+                // The account picker was closed: the person chose not to, nothing failed.
+                callback(null, null)
             } catch (t: Throwable) {
                 callback(null, t.message ?: "Google sign-in failed")
             }

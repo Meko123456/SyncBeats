@@ -155,16 +155,32 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun a_cancelled_google_sign_in_surfaces_its_reason() = runTest(dispatcher) {
+    fun a_failed_google_sign_in_surfaces_its_reason() = runTest(dispatcher) {
         google.tokens = null
-        google.error = "cancelled by user"
+        google.error = "Google Play services is out of date"
         val vm = viewModel()
 
         vm.onIntent(AuthIntent.SignInWithGoogle)
         advanceUntilIdle()
 
         assertFalse(vm.state.value.signedIn)
-        assertEquals("Could not sign in with Google. cancelled by user.", vm.state.value.error)
+        assertEquals("Could not sign in with Google. Google Play services is out of date.", vm.state.value.error)
+        assertFalse(vm.state.value.loading)
+    }
+
+    @Test
+    fun closing_googles_sheet_is_not_an_error() = runTest(dispatcher) {
+        // Neither tokens nor a message: the person backed out, which used to be answered in red
+        // as a failed sign-in.
+        google.tokens = null
+        google.error = null
+        val vm = viewModel()
+
+        vm.onIntent(AuthIntent.SignInWithGoogle)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.signedIn)
+        assertNull(vm.state.value.error)
         assertFalse(vm.state.value.loading)
     }
 

@@ -87,6 +87,32 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun backing_out_of_connecting_youtube_is_not_an_error() = runTest(dispatcher) {
+        google.tokens = null
+        google.error = null
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(HomeIntent.ConnectYouTube)
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.error)
+    }
+
+    @Test
+    fun a_failed_youtube_connection_says_so() = runTest(dispatcher) {
+        google.tokens = null
+        google.error = "Google Play services is out of date"
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(HomeIntent.ConnectYouTube)
+        advanceUntilIdle()
+
+        assertEquals("Could not connect YouTube. Google Play services is out of date.", vm.state.value.error)
+    }
+
+    @Test
     fun a_failure_without_a_message_never_reads_null() = runTest(dispatcher) {
         // It read "Trending failed: null".
         music.failWith = IllegalStateException()
