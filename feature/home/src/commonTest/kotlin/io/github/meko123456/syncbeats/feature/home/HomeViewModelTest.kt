@@ -87,6 +87,25 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun a_failure_without_a_message_never_reads_null() = runTest(dispatcher) {
+        // It read "Trending failed: null".
+        music.failWith = IllegalStateException()
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        assertEquals("Could not load what's trending.", vm.state.value.error)
+    }
+
+    @Test
+    fun no_connection_is_said_as_such_and_not_as_the_resolver_error() = runTest(dispatcher) {
+        music.failWith = IllegalStateException("Unable to resolve host \"www.youtube.com\": No address associated with hostname")
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        assertEquals("No connection. Check your network and try again.", vm.state.value.error)
+    }
+
+    @Test
     fun a_disconnected_account_skips_the_rail_requests_entirely() = runTest(dispatcher) {
         ytAccount.connected = false
         val vm = viewModel()

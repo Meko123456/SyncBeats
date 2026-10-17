@@ -2,6 +2,7 @@ package io.github.meko123456.syncbeats.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
 import io.github.meko123456.syncbeats.core.domain.music.MusicSource
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.domain.repository.GoogleAuthController
@@ -115,7 +116,7 @@ class HomeViewModel(
             _loadingTrending.value = true
             runCatching { youtube.trending() }
                 .onSuccess { _trending.value = it }
-                .onFailure { _error.value = "Trending failed: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not load what's trending") }
             _loadingTrending.value = false
         }
     }
@@ -148,7 +149,7 @@ class HomeViewModel(
         viewModelScope.launch {
             runCatching { google.signInSuspend() }
                 .onSuccess { loadYouTubeRails() }
-                .onFailure { _error.value = "Could not connect YouTube: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not connect YouTube") }
         }
     }
 
@@ -168,7 +169,7 @@ class HomeViewModel(
                         )
                     }
                 }
-                .onFailure { _error.value = "Could not load playlist: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not load that playlist") }
             _loadingPlaylist.value = false
         }
     }
@@ -182,7 +183,7 @@ class HomeViewModel(
             runCatching {
                 val details = youtube.playlist(url)
                 firebase.savePlaylist(uid, details)
-            }.onFailure { _error.value = "Import failed: ${it.message}" }
+            }.onFailure { _error.value = ErrorCopy.of(it, "Could not import that playlist") }
             _importing.value = false
         }
     }
@@ -190,7 +191,7 @@ class HomeViewModel(
     private fun removePlaylist(playlist: SavedPlaylist) {
         viewModelScope.launch {
             runCatching { firebase.removePlaylist(uid, playlist.key) }
-                .onFailure { _error.value = it.message }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not remove that playlist") }
         }
     }
 
@@ -199,7 +200,7 @@ class HomeViewModel(
             _loadingPlaylist.value = true
             runCatching { youtube.playlist(playlist.url) }
                 .onSuccess { _openedPlaylist.value = it }
-                .onFailure { _error.value = "Could not load playlist: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not load that playlist") }
             _loadingPlaylist.value = false
         }
     }
@@ -242,7 +243,7 @@ class HomeViewModel(
                 code
             }
                 .onSuccess { code -> _enterRoomId.value = code }
-                .onFailure { _error.value = "Could not start room: ${it.message}" }
+                .onFailure { _error.value = ErrorCopy.of(it, "Could not start a room") }
         }
     }
 
