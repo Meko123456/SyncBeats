@@ -9,7 +9,9 @@ import dev.gitlive.firebase.database.database
 import io.github.meko123456.syncbeats.core.domain.repository.AuthGateway
 import io.github.meko123456.syncbeats.core.model.AuthUser
 import io.github.meko123456.syncbeats.core.model.GoogleTokens
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * [AuthGateway] over Firebase Auth.
@@ -55,13 +57,24 @@ class AuthRepository : AuthGateway {
         return user.toAuthUser()
     }
 
-    /** Username chosen at sign-up, or null if the profile is missing. */
+    /**
+     * Username chosen at sign-up, or null if the profile is missing or doesn't come.
+     *
+     * Bounded, because sign-in waits for it with the form locked. A read that never answered
+     * held the sign-in screen at a spinner, every button disabled, until the app was restarted:
+     * on the Firebase emulators that was the third sign-in after a sign-out in one process. The
+     * caller has a fallback for null, so a username that is late costs a few seconds at most.
+     */
     override suspend fun fetchUsername(uid: String): String? =
         runCatching {
-            Firebase.database.reference("users/$uid/username").valueEvents.first().value<String?>()
+            withTimeoutOrNull(USERNAME_WAIT) {
+                Firebase.database.reference("users/$uid/username").valueEvents.first().value<String?>()
+            }
         }.getOrNull()
 
     override suspend fun signOut() = Firebase.auth.signOut()
 }
+
+private val USERNAME_WAIT = 5.seconds
 
 private fun FirebaseUser.toAuthUser() = AuthUser(uid = uid, email = email, displayName = displayName)
