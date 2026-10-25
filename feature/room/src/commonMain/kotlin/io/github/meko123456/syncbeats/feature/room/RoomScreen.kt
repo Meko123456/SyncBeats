@@ -200,6 +200,7 @@ fun RoomScreen(
         if (showLibrary) {
             LibrarySheet(
                 library = library,
+                queued = state.queue.mapTo(HashSet()) { it.videoId },
                 onOpenPlaylist = { a0 -> viewModel.onIntent(RoomIntent.OpenLibraryPlaylist(a0)) },
                 onClosePlaylist = { viewModel.onIntent(RoomIntent.CloseLibraryPlaylist) },
                 onQueueTrack = {
@@ -219,6 +220,9 @@ fun RoomScreen(
 @Composable
 private fun LibrarySheet(
     library: LibraryState,
+    // The room's queue, as video ids. The sheet stays open while queueing, and its Queue buttons
+    // used to change nothing in it, so a second tap to make sure queued the track twice.
+    queued: Set<String>,
     onOpenPlaylist: (io.github.meko123456.syncbeats.core.model.SavedPlaylist) -> Unit,
     onClosePlaylist: () -> Unit,
     onQueueTrack: (SearchResult) -> Unit,
@@ -283,9 +287,7 @@ private fun LibrarySheet(
                                 },
                                 headlineContent = { Text(item.title, maxLines = 1) },
                                 supportingContent = { Text(item.artist, maxLines = 1) },
-                                trailingContent = {
-                                    TextButton(onClick = { onQueueHistory(item) }) { Text("Queue") }
-                                },
+                                trailingContent = { QueueButton(item.videoId in queued) { onQueueHistory(item) } },
                             )
                         }
                     }
@@ -298,10 +300,12 @@ private fun LibrarySheet(
                     }
                     TextButton(onClick = onClosePlaylist) { Text("Back") }
                 }
+                val allQueued = opened.tracks.isNotEmpty() && opened.tracks.all { it.videoId in queued }
                 OutlinedButton(
                     onClick = { onQueueAll(opened) },
+                    enabled = !allQueued,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Queue all") }
+                ) { Text(if (allQueued) "All queued" else "Queue all") }
                 LazyColumn(modifier = Modifier.fillMaxWidth().height(420.dp)) {
                     items(opened.tracks, key = { it.videoId }) { track ->
                         ListItem(
@@ -314,15 +318,19 @@ private fun LibrarySheet(
                             },
                             headlineContent = { Text(track.title, maxLines = 1) },
                             supportingContent = { Text(track.artist, maxLines = 1) },
-                            trailingContent = {
-                                TextButton(onClick = { onQueueTrack(track) }) { Text("Queue") }
-                            },
+                            trailingContent = { QueueButton(track.videoId in queued) { onQueueTrack(track) } },
                         )
                     }
                 }
             }
         }
     }
+}
+
+/** "Queue", or "Queued" and off while the track is in the room's queue. */
+@Composable
+private fun QueueButton(inQueue: Boolean, onQueue: () -> Unit) {
+    TextButton(onClick = onQueue, enabled = !inQueue) { Text(if (inQueue) "Queued" else "Queue") }
 }
 
 @Composable
