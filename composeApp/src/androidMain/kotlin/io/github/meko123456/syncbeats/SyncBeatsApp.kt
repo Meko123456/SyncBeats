@@ -9,6 +9,8 @@ import org.schabi.newpipe.extractor.NewPipe
 class SyncBeatsApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        // First, before anything can touch Auth or the database.
+        FirebaseEmulators.useIfConfigured(this)
         NewPipe.init(NewPipeDownloaderImpl.instance())
         initKoin {
             androidContext(this@SyncBeatsApp)

@@ -5,6 +5,9 @@ needs a Firebase project to run: Firebase Auth for accounts and the Realtime Dat
 rooms. This is the one-time setup; after it, `./gradlew :composeApp:installDebug` is all
 there is.
 
+To try the app without a project of your own, skip to
+[No project at all: the Firebase emulators](#no-project-at-all-the-firebase-emulators).
+
 ## 1. Create a Firebase project
 
 1. Open <https://console.firebase.google.com> and click **Add project**. Analytics is not
@@ -69,6 +72,31 @@ step.
    re-seeked (checked every 3 s).
 4. Rooms you create are bookmarked under **My rooms** automatically; a room you joined can be
    bookmarked from its top bar. Codes never expire, so a bookmarked room is a one-tap rejoin.
+
+## No project at all: the Firebase emulators
+
+The Auth and Realtime Database emulators can stand in for a project, with the repo's rules
+loaded. There is nothing to sign up for, and nothing the app does leaves the computer.
+
+```sh
+(cd tools/rules-tests && npm ci)    # once; the firebase-tools the rules tests use
+tools/rules-tests/node_modules/.bin/firebase emulators:start --project demo-syncbeats --only auth,database
+```
+
+The database emulator runs on Java, 11 or later. Leave it running, and in another terminal:
+
+```sh
+./gradlew :composeApp:installDebug -Psyncbeats.firebaseEmulatorHost=10.0.2.2
+```
+
+- `10.0.2.2` is the computer as an Android emulator sees it. For a phone on USB, forward the
+  ports with `adb reverse tcp:9099 tcp:9099` and `adb reverse tcp:9100 tcp:9100`, then use
+  `-Psyncbeats.firebaseEmulatorHost=localhost`.
+- That build leaves `google-services.json` out even when it is there, and gives the app a
+  made-up `demo-syncbeats` project, so it cannot reach a real one. Build without the flag to
+  go back to your own project.
+- Accounts and rooms live in the emulators and are gone when they stop. Create accounts in
+  the app as usual. **Continue with Google** needs a real project and reports an error.
 
 ## Notes
 

@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.googleServices) apply false
 }
 
+// Set to run the debug app against the local Firebase emulators instead of a real project, from
+// this host: 10.0.2.2 is the computer as an Android emulator sees it. SETUP.md has the steps.
+val firebaseEmulatorHost = providers.gradleProperty("syncbeats.firebaseEmulatorHost").orNull.orEmpty()
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -123,9 +127,17 @@ android {
         versionCode = 2
         versionName = "2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
+        }
         release {
             // R8 with resource shrinking. Everything that needs keeping is named in proguard-rules.pro;
             // CI builds this variant on every push so the config cannot rot unnoticed (#32).
@@ -165,7 +177,12 @@ android {
 
 // Firebase config is developer-specific; skip the plugin until the file is added
 // so a fresh clone still compiles. The app still needs it to run.
-if (file("google-services.json").exists()) {
+//
+// A build for the emulators leaves the file out even when it is there, so nothing of a real
+// project ends up in that APK: the app makes up a demo- project instead (FirebaseEmulators.kt).
+if (firebaseEmulatorHost.isNotEmpty()) {
+    logger.lifecycle("Firebase emulators at $firebaseEmulatorHost: google-services.json left out of this build.")
+} else if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.googleServices.get().pluginId)
 } else {
     logger.warn("composeApp/google-services.json missing — Firebase will not work at runtime. See README.md.")

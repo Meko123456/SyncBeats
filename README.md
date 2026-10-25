@@ -121,6 +121,10 @@ The project builds without Firebase credentials, but it needs them at runtime.
 
 Then build and install as usual (Android Studio, or `./gradlew :composeApp:installDebug`).
 
+Or skip the project: the app can run against the local Firebase emulators instead, with
+accounts and rooms that live on your computer. See
+[SETUP.md](SETUP.md#no-project-at-all-the-firebase-emulators).
+
 ## Trying it with two people
 
 1. On device A: create an account, tap **Create room**, and share the code shown
