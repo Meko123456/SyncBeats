@@ -1,6 +1,7 @@
 package io.github.meko123456.syncbeats.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -45,7 +46,9 @@ fun MainScreen(
             }
         },
     ) { inner ->
-        Box(Modifier.fillMaxSize().padding(inner)) {
+        // Consumed as well as padded: Home and Rooms each have a Scaffold of their own, which
+        // otherwise added the status bar and the bottom bar a second time.
+        Box(Modifier.fillMaxSize().padding(inner).consumeWindowInsets(inner)) {
             when (tab) {
                 0 -> HomeScreen(onEnterRoom = onEnterRoom)
                 else -> LobbyScreen(
