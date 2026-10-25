@@ -3,6 +3,7 @@ package io.github.meko123456.syncbeats.core.data
 import io.github.meko123456.syncbeats.core.domain.repository.RoomRepository
 
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.database.DatabaseException
 import dev.gitlive.firebase.database.DatabaseReference
 import dev.gitlive.firebase.database.ServerValue
 import dev.gitlive.firebase.database.database
@@ -18,6 +19,7 @@ import io.github.meko123456.syncbeats.core.model.SavedPlaylist
 import io.github.meko123456.syncbeats.core.model.SavedRoom
 import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -195,13 +197,24 @@ class FirebaseRepository : RoomRepository {
     private fun historyRef(uid: String) = db.reference("users/$uid/history")
     private fun savedRoomsRef(uid: String) = db.reference("users/$uid/savedRooms")
 
+    /**
+     * Ends a user's library with an empty list once the database stops letting them read it.
+     *
+     * The database cancels a listener whose reads stop being allowed, and the flow then fails with
+     * the DatabaseException. For the user's own library that happens on every sign-out, because
+     * the screens watching it are still on their way out when Auth forgets the user. Nothing
+     * caught it, so signing out crashed the app. A user who isn't signed in has no library to see.
+     */
+    private fun <T> Flow<List<T>>.emptyOnceUnreadable(): Flow<List<T>> =
+        catch { e -> if (e is DatabaseException) emit(emptyList()) else throw e }
+
     override fun observeSavedRooms(uid: String): Flow<List<SavedRoom>> =
         savedRoomsRef(uid).orderByChild("savedAt").valueEvents.map { snapshot ->
             snapshot.children.mapNotNull { child ->
                 runCatching { child.value<SavedRoom>() }.getOrNull()
                     ?.also { it.key = child.key.orEmpty() }
             }
-        }
+        }.emptyOnceUnreadable()
 
     override suspend fun saveRoom(uid: String, roomId: String, name: String) {
         savedRoomsRef(uid).child(roomId).setValue(
@@ -222,7 +235,7 @@ class FirebaseRepository : RoomRepository {
                 runCatching { child.value<SavedPlaylist>() }.getOrNull()
                     ?.also { it.key = child.key.orEmpty() }
             }.reversed()
-        }
+        }.emptyOnceUnreadable()
 
     override suspend fun savePlaylist(uid: String, details: PlaylistDetails) {
         playlistsRef(uid).push().setValue(
@@ -246,7 +259,7 @@ class FirebaseRepository : RoomRepository {
                 runCatching { child.value<HistoryItem>() }.getOrNull()
                     ?.also { it.key = child.key.orEmpty() }
             }.sortedByDescending { it.playedAt }
-        }
+        }.emptyOnceUnreadable()
 
     override suspend fun logHistory(uid: String, state: PlaybackState) {
         if (state.videoId.isBlank()) return
