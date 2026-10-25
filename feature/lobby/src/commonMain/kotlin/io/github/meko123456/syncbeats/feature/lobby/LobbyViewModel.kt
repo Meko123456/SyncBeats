@@ -44,9 +44,17 @@ class LobbyViewModel(
 
     private val _local = MutableStateFlow(LobbyLocal())
 
+    // A StateFlow of its own, so it always has a value. combine waits until every flow has given
+    // one, and with the listener's list straight in, nothing the lobby did reached the screen
+    // until the database answered: offline, or with a stalled connection, Create room showed no
+    // spinner, Join no reason a code was refused. It also keeps the last rooms on screen while the
+    // listener restarts on the way back to the tab.
+    private val savedRooms = firebase.observeSavedRooms(uid)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val state: StateFlow<LobbyState> = combine(
         _local,
-        firebase.observeSavedRooms(uid),
+        savedRooms,
     ) { local, savedRooms ->
         LobbyState(
             savedRooms = savedRooms.sortedByDescending { it.savedAt },

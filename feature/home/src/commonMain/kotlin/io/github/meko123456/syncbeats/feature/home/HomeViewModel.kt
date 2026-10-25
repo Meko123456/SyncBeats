@@ -85,9 +85,16 @@ class HomeViewModel(
         HomeSignals(enter, error)
     }
 
+    // StateFlows of their own, as in the lobby: combine waits for every flow's first value, so
+    // with the listeners straight in, Home's own loading and error states waited for the database.
+    private val history = firebase.observeHistory(uid)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val playlists = firebase.observePlaylists(uid)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val state: StateFlow<HomeState> = combine(
-        firebase.observeHistory(uid),
-        firebase.observePlaylists(uid),
+        history,
+        playlists,
         extrasFlow,
         signalsFlow,
         _yt,
