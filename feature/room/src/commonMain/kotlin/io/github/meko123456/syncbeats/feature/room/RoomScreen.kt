@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,7 +53,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +72,9 @@ import io.github.meko123456.syncbeats.core.model.QueueItem
 import io.github.meko123456.syncbeats.core.model.SearchResult
 import io.github.meko123456.syncbeats.core.model.currentTimeMillis
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -564,16 +570,46 @@ internal fun ChatSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         var draft by remember { mutableStateOf("") }
+        val listState = rememberLazyListState()
+        val chat by rememberUpdatedState(state.chat)
+        // Follow the conversation. The list opened at the oldest message and stayed there, so
+        // once it was full neither a message just sent nor one coming in could be seen. It now
+        // opens at the newest and keeps to the newest, unless it's scrolled up to read back:
+        // whether it follows is decided when a scroll ends, by whether it ended at the bottom.
+        var following by remember { mutableStateOf(true) }
+        // A message of your own goes to the bottom even after reading back, to show it went.
         val send = {
             if (draft.isNotBlank()) {
                 onSend(draft); draft = ""
+                following = true
             }
+        }
+        LaunchedEffect(listState) {
+            // drop(1): the first reading comes after the first layout, at the top of a full list,
+            // and is no scroll at all.
+            snapshotFlow { listState.isScrollInProgress }
+                .drop(1)
+                .filter { !it }
+                .collect { following = !listState.canScrollForward }
+        }
+        LaunchedEffect(chat.size) {
+            val last = chat.lastIndex
+            if (last < 0 || !following) return@LaunchedEffect
+            // Not before the list knows about the new message: scrolling to an item it hasn't
+            // measured yet went nowhere.
+            snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > last }
+            listState.animateScrollToItem(last)
+        }
+        // The keyboard takes the bottom of the sheet, and the newest messages with it.
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.layoutInfo.viewportSize.height }
+                .collect { if (following && chat.isNotEmpty()) listState.scrollToItem(chat.lastIndex) }
         }
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Chat", style = MaterialTheme.typography.titleMedium)
             // What is left of the sheet, not a fixed 420dp: the sheet makes room for the keyboard,
             // and with a list that couldn't shrink, the message field went under it.
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f), reverseLayout = false) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f), state = listState, reverseLayout = false) {
                 items(state.chat, key = { it.key }) { msg ->
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         Text(msg.username, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
