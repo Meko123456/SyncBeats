@@ -531,7 +531,9 @@ internal fun SearchSheet(
                     CircularProgressIndicator()
                 }
             }
-            LazyColumn(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+            // What is left of the sheet, not a fixed 420dp: the sheet makes room for the keyboard,
+            // and a list that can't shrink pushes everything below it out of the sheet.
+            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 items(results, key = { it.videoId }) { r ->
                     ListItem(
                         leadingContent = {
@@ -569,7 +571,9 @@ internal fun ChatSheet(
         }
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Chat", style = MaterialTheme.typography.titleMedium)
-            LazyColumn(modifier = Modifier.fillMaxWidth().height(420.dp), reverseLayout = false) {
+            // What is left of the sheet, not a fixed 420dp: the sheet makes room for the keyboard,
+            // and with a list that couldn't shrink, the message field went under it.
+            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f), reverseLayout = false) {
                 items(state.chat, key = { it.key }) { msg ->
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         Text(msg.username, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)

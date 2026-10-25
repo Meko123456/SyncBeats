@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -64,12 +66,16 @@ fun LobbyScreen(
             )
         },
     ) { inner ->
+        // Above the keyboard: panned instead, the window pushed the top bar off screen and left
+        // Join, and the reason a code was refused, under the keyboard.
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
+                .consumeWindowInsets(inner)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
