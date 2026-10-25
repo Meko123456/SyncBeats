@@ -46,8 +46,12 @@ class AuthRepository : AuthGateway {
         val credential = GoogleAuthProvider.credential(tokens.idToken, tokens.accessToken)
         val result = Firebase.auth.signInWithCredential(credential)
         val user = result.user ?: error("Google sign-in returned no user")
-        if (fetchUsername(user.uid) == null) {
-            Firebase.database.reference("users/${user.uid}").setValue(
+        // Only when the database says for certain there is no username: a read that failed or ran
+        // out of time is not a new user. And merged in, not set over the node, which replaced
+        // everything under it, so a returning user whose read didn't come back lost their saved
+        // rooms, playlists and history to a fresh profile.
+        if (hasUsername(user.uid) == false) {
+            Firebase.database.reference("users/${user.uid}").updateChildren(
                 mapOf(
                     "username" to (tokens.displayName ?: user.displayName ?: "User"),
                     "createdAt" to ServerValue.TIMESTAMP,
@@ -56,6 +60,14 @@ class AuthRepository : AuthGateway {
         }
         return user.toAuthUser()
     }
+
+    /** Whether the profile has a username; null when the read failed or didn't come in time. */
+    private suspend fun hasUsername(uid: String): Boolean? =
+        runCatching {
+            withTimeoutOrNull(USERNAME_WAIT) {
+                Firebase.database.reference("users/$uid/username").valueEvents.first().exists
+            }
+        }.getOrNull()
 
     /**
      * Username chosen at sign-up, or null if the profile is missing or doesn't come.
