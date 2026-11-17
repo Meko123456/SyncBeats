@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.meko123456.syncbeats.core.designsystem.ErrorLine
 import io.github.meko123456.syncbeats.core.model.RoomCode
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -176,10 +177,7 @@ fun LobbyScreen(
                 Spacer(Modifier.height(8.dp))
                 CircularProgressIndicator()
             }
-            state.error?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = { viewModel.onIntent(LobbyIntent.ClearError) }) { Text("Dismiss") }
-            }
+            ErrorLine(state.error, onDismiss = { viewModel.onIntent(LobbyIntent.ClearError) })
         }
     }
 }

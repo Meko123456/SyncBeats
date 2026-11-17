@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import io.github.meko123456.syncbeats.core.designsystem.ErrorLine
 
 @Composable
 fun AuthScreen(
@@ -150,10 +151,7 @@ fun AuthScreen(
                 Spacer(Modifier.height(8.dp))
                 CircularProgressIndicator()
             }
-            state.error?.let {
-                Spacer(Modifier.height(8.dp))
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
+            ErrorLine(state.error, gapAbove = 8.dp)
         }
     }
 }

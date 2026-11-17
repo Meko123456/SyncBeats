@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import io.github.meko123456.syncbeats.core.designsystem.ErrorLine
 import io.github.meko123456.syncbeats.core.designsystem.trackCount
 import io.github.meko123456.syncbeats.core.model.AccountPlaylist
 import io.github.meko123456.syncbeats.core.model.HistoryItem
@@ -225,13 +226,12 @@ fun HomeScreen(
                 TrendingRow(track) { viewModel.onIntent(HomeIntent.PlayTrackInNewRoom(track)) }
             }
 
-            state.error?.let { err ->
-                item {
-                    Column(Modifier.padding(horizontal = 16.dp)) {
-                        Text(err, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = { viewModel.onIntent(HomeIntent.ClearError) }) { Text("Dismiss") }
-                    }
-                }
+            item {
+                ErrorLine(
+                    state.error,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    onDismiss = { viewModel.onIntent(HomeIntent.ClearError) },
+                )
             }
             item { Spacer(Modifier.height(24.dp)) }
         }

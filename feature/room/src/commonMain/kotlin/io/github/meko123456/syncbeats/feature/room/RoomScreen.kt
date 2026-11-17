@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import io.github.meko123456.syncbeats.core.designsystem.ErrorCopy
+import io.github.meko123456.syncbeats.core.designsystem.ErrorLine
 import io.github.meko123456.syncbeats.core.designsystem.PlatformBackHandler
 import io.github.meko123456.syncbeats.core.designsystem.trackCount
 import io.github.meko123456.syncbeats.core.domain.sync.ListenerStatus
@@ -166,12 +167,9 @@ fun RoomScreen(
                     )
                 }
             }
-            state.error?.let { err ->
-                // No "Error:" prefix any more — ErrorCopy produces a sentence that says what
-                // happened and what to do, so labelling it adds nothing.
-                Text(err, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = { viewModel.onIntent(RoomIntent.ClearError) }) { Text("Dismiss") }
-            }
+            // No "Error:" prefix: ErrorCopy produces a sentence that says what happened and what
+            // to do, so labelling it adds nothing. The line is always there, for the screen reader.
+            ErrorLine(state.error, onDismiss = { viewModel.onIntent(RoomIntent.ClearError) })
         }
 
         if (showSearch) {

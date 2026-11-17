@@ -24,5 +24,10 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+        // Compose UI tests run on the iOS simulator, as the features' do: what a screen reader is
+        // told by ErrorLine is only visible to a test that composes it.
+        iosTest.dependencies {
+            implementation(libs.compose.ui.test)
+        }
     }
 }
