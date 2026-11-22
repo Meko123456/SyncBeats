@@ -115,6 +115,8 @@ kotlin {
 android {
     namespace = "io.github.meko123456.syncbeats"
     compileSdk = 37
+    // The minor level too, as in the KMP library convention: Compose 1.13's AARs ask for 37.1.
+    compileSdkMinor = 1
 
     defaultConfig {
         // Still com.example: the applicationId is the identity Firebase and the Play Store key

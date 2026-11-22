@@ -34,8 +34,12 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         extensions.configure(LibraryExtension::class.java) {
             // 37 because AndroidX now requires it: Compose BOM 2026.09.00 and core-ktx 1.19.0 ship
             // AARs whose metadata declares a minimum compileSdk of 37, and a module on 36 fails at
-            // checkAarMetadata before compiling a line.
+            // checkAarMetadata before compiling a line. The minor level, 1, for the same reason one
+            // step on: Compose 1.13 (what Compose Multiplatform material3 1.13.0-beta02 pulls in)
+            // declares 37.1, and a module on 37.0 fails there instead. Needs the 37.1 platform in
+            // the SDK, which AGP fetches on CI and sdkmanager installs here.
             compileSdk = 37
+            compileSdkMinor = 1
             defaultConfig {
                 minSdk = 26
             }
