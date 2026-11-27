@@ -100,7 +100,6 @@ class RoomViewModel(
      */
     override fun onCleared() {
         syncEngine.stop()
-        super.onCleared()
     }
 
     /** The single entry point for everything the room screen can ask for. */
